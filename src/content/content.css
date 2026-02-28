@@ -1,0 +1,465 @@
+/* ================================================================
+   LinguaFlow – Content Script Styles
+   ================================================================ */
+
+/* ─── Replace mode: loading shimmer ───────────────────────────── */
+.immersive-translate-loading {
+  opacity: 0.45;
+  pointer-events: none;
+  position: relative;
+}
+.immersive-translate-loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 25%, rgba(99,102,241,0.08) 50%, transparent 75%);
+  background-size: 200% 100%;
+  animation: it-shimmer 1.5s ease-in-out infinite;
+}
+@keyframes it-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── Bilingual mode: translation block ───────────────────────── */
+.it-bilingual-block {
+  margin: 4px 0 6px 0;
+  padding: 6px 10px;
+  border-left: 3px solid var(--it-border-color, #6366f1);
+  color: var(--it-text-color, #6b7280);
+  font-size: var(--it-font-size, 0.93em);
+  line-height: 1.6;
+  font-style: var(--it-font-style, italic);
+  background: rgba(99, 102, 241, 0.03);
+  border-radius: 0 6px 6px 0;
+  transition: background 0.2s, border-color 0.2s;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+.it-bilingual-block:hover {
+  background: rgba(99, 102, 241, 0.06);
+}
+
+/* ─── Bilingual mode: inline block variant ────────────────────── */
+.it-bilingual-block.it-inline-block {
+  display: inline;
+  margin: 0 0 0 4px;
+  padding: 2px 6px;
+  border-left: 2px solid var(--it-border-color, #6366f1);
+  border-radius: 0 3px 3px 0;
+}
+
+/* ─── Bilingual mode: loading dots ────────────────────────────── */
+.it-loading {
+  padding: 8px 12px;
+}
+.it-loading-dots {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.it-loading-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #6366f1;
+  opacity: 0.3;
+  animation: it-dot-pulse 1.2s ease-in-out infinite;
+}
+.it-loading-dots span:nth-child(2) { animation-delay: 0.15s; }
+.it-loading-dots span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes it-dot-pulse {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(1); }
+  40% { opacity: 1; transform: scale(1.3); }
+}
+
+/* ─── Hover highlight (before translation fires) ────────────── */
+.it-hover-highlight {
+  outline: 2px solid rgba(99, 102, 241, 0.3);
+  outline-offset: 2px;
+  border-radius: 3px;
+  transition: outline-color 0.15s ease;
+}
+
+/* ─── Hover translate block ───────────────────────────────────── */
+.it-hover-block {
+  animation: it-hover-slide-in 0.2s ease-out;
+}
+@keyframes it-hover-slide-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Bilingual mode: error state ─────────────────────────────── */
+.it-error {
+  color: #ef4444;
+  border-left-color: #ef4444;
+  font-size: 0.85em;
+  background: rgba(239, 68, 68, 0.04);
+}
+
+/* ================================================================
+   Floating Action Button (FAB)
+   ================================================================ */
+#immersive-translate-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: #6366f1;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2147483647;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4), 0 1px 3px rgba(0,0,0,0.1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  border: none;
+  outline: none;
+  -webkit-font-smoothing: antialiased;
+}
+#immersive-translate-fab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.45), 0 2px 6px rgba(0,0,0,0.12);
+}
+#immersive-translate-fab.active {
+  background: #4f46e5;
+  border-radius: 14px;
+  transform: rotate(0deg);
+}
+#immersive-translate-fab.translating {
+  background: #10b981;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4), 0 1px 3px rgba(0,0,0,0.1);
+}
+#immersive-translate-fab svg {
+  width: 22px;
+  height: 22px;
+  fill: #fff;
+  stroke: none;
+  transition: transform 0.25s;
+}
+#immersive-translate-fab.active svg {
+  transform: rotate(90deg);
+}
+
+/* ─── FAB Menu ────────────────────────────────────────────────── */
+#immersive-translate-fab-menu {
+  position: fixed;
+  bottom: 82px;
+  right: 20px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0,0,0,0.06);
+  z-index: 2147483646;
+  padding: 8px 0;
+  min-width: 210px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px) scale(0.92);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(0,0,0,0.06);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+#immersive-translate-fab-menu.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+.immersive-fab-menu-header {
+  padding: 10px 16px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+.immersive-fab-menu-divider {
+  height: 1px;
+  background: #f3f4f6;
+  margin: 4px 0;
+}
+.immersive-fab-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 13px;
+  color: #374151;
+  text-align: left;
+  transition: background 0.1s;
+  font-family: inherit;
+  line-height: 1.4;
+}
+.immersive-fab-menu-item:hover {
+  background: #f5f3ff;
+}
+.immersive-fab-menu-item:active {
+  background: #ede9fe;
+}
+.immersive-fab-menu-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+  background: #f5f3ff;
+  color: #6366f1;
+}
+.immersive-fab-menu-item[data-action="remove"] .immersive-fab-menu-icon {
+  background: #fef2f2;
+  color: #ef4444;
+}
+.immersive-fab-menu-item[data-action="mode"] .immersive-fab-menu-icon {
+  background: #ecfdf5;
+  color: #10b981;
+}
+
+/* ─── Mode badge in menu ──────────────────────────────────────── */
+.immersive-fab-menu-badge {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: #f3f4f6;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.immersive-fab-menu-badge.on {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+/* ================================================================
+   Onboarding Overlay
+   ================================================================ */
+#immersive-translate-onboarding {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  animation: it-fade-in 0.3s ease;
+}
+#immersive-translate-onboarding.it-ob-closing {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+@keyframes it-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.it-onboarding-card {
+  background: #fff;
+  border-radius: 20px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  animation: it-slide-up 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes it-slide-up {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+/* ─── Header / Visual area ───────────────────────────────────── */
+.it-onboarding-header {
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+  padding: 32px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+}
+
+/* ─── Visual containers ──────────────────────────────────────── */
+.it-ob-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Slide 2: demo translation lines */
+.it-ob-visual-demo {
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+.it-ob-demo-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.it-ob-demo-original {
+  font-size: 13px;
+  color: #6b7280;
+  flex: 1;
+  font-style: italic;
+}
+.it-ob-demo-arrow {
+  flex-shrink: 0;
+}
+.it-ob-demo-translated {
+  font-size: 13px;
+  color: #1f2937;
+  font-weight: 600;
+  flex: 1;
+  text-align: right;
+}
+
+/* Slide 3: engine grid */
+.it-ob-visual-engines {
+  width: 100%;
+}
+.it-ob-engine-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+  max-width: 240px;
+  margin: 0 auto;
+}
+.it-ob-engine {
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  transition: all 0.15s;
+}
+.it-ob-engine.active {
+  border-color: #6366f1;
+  color: #4f46e5;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Slide 4: keyboard shortcuts */
+.it-ob-visual-shortcuts {
+  width: 100%;
+}
+.it-ob-key-combo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.it-ob-key-combo kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  padding: 8px 16px;
+  background: #fff;
+  border: 2px solid #d1d5db;
+  border-bottom-width: 4px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #374151;
+  font-family: inherit;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+.it-ob-plus {
+  font-size: 18px;
+  font-weight: 700;
+  color: #9ca3af;
+}
+
+/* ─── Body ───────────────────────────────────────────────────── */
+.it-onboarding-body {
+  padding: 24px 28px 16px;
+  text-align: center;
+}
+
+/* ─── Progress dots ──────────────────────────────────────────── */
+.it-ob-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.it-ob-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d1d5db;
+  transition: all 0.2s;
+}
+.it-ob-dot.active {
+  background: #6366f1;
+  width: 20px;
+  border-radius: 4px;
+}
+
+/* ─── Title & description ────────────────────────────────────── */
+.it-ob-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 8px;
+}
+.it-ob-desc {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+.it-ob-desc strong {
+  color: #374151;
+}
+
+/* ─── Footer ─────────────────────────────────────────────────── */
+.it-onboarding-footer {
+  padding: 0 28px 24px;
+  display: flex;
+  gap: 10px;
+}
+.it-onboarding-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.it-onboarding-btn.primary {
+  background: #6366f1;
+  color: #fff;
+}
+.it-onboarding-btn.primary:hover {
+  background: #4f46e5;
+}
+.it-onboarding-btn.secondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+.it-onboarding-btn.secondary:hover {
+  background: #e5e7eb;
+}
