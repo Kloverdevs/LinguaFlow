@@ -2,6 +2,7 @@ import { TranslationEngine, TranslationResult, EngineConfig } from '@/types/tran
 import { createEngine } from '@/engines';
 import { getCached, putCached } from '@/shared/cache';
 import { getSettings } from '@/shared/storage';
+import { getEngineInfo } from '@/constants/engines';
 import { logger } from '@/shared/logger';
 
 const MAX_CONCURRENT_BATCHES = 3;
@@ -15,6 +16,12 @@ export async function translateTexts(
   const settings = await getSettings();
   const engineType = engineOverride ?? settings.engine;
   const engineConfig: EngineConfig = settings.engineConfigs?.[engineType] ?? { engine: engineType };
+
+  // Validate API key for engines that require one
+  const engineInfo = getEngineInfo(engineType);
+  if (engineInfo.requiresKey && !engineConfig.apiKey) {
+    throw new Error(`API key required for ${engineInfo.name}. Open the extension settings to add your key.`);
+  }
 
   // Check cache for each text
   const cacheResults = await Promise.all(

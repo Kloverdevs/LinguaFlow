@@ -5,6 +5,11 @@ import { DeepLEngine } from './deepl-engine';
 import { OpenAIEngine } from './openai-engine';
 import { ClaudeEngine } from './claude-engine';
 import { MicrosoftTranslateEngine } from './microsoft-engine';
+import { BingFreeEngine } from './bing-free-engine';
+import { YandexEngine } from './yandex-engine';
+import { LingvaEngine } from './lingva-engine';
+import { MyMemoryEngine } from './mymemory-engine';
+import { LibreTranslateEngine } from './libre-engine';
 
 export function createEngine(
   type: TranslationEngine,
@@ -13,6 +18,16 @@ export function createEngine(
   switch (type) {
     case TranslationEngine.GOOGLE_FREE:
       return new GoogleTranslateEngine(config);
+    case TranslationEngine.BING_FREE:
+      return new BingFreeEngine(config);
+    case TranslationEngine.YANDEX:
+      return new YandexEngine(config);
+    case TranslationEngine.LINGVA:
+      return new LingvaEngine(config);
+    case TranslationEngine.MYMEMORY:
+      return new MyMemoryEngine(config);
+    case TranslationEngine.LIBRE_TRANSLATE:
+      return new LibreTranslateEngine(config);
     case TranslationEngine.DEEPL:
       return new DeepLEngine(config);
     case TranslationEngine.OPENAI:

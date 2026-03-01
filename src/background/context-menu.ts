@@ -1,4 +1,22 @@
 import { sendToContent } from '@/shared/message-bus';
+import { logger } from '@/shared/logger';
+
+async function ensureContentScript(tabId: number): Promise<void> {
+  try {
+    // Try sending a ping first; if it fails, inject the script
+    await chrome.tabs.sendMessage(tabId, { type: '__PING__' });
+  } catch {
+    // Content script not loaded — inject it
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: ['content/index.js'],
+    });
+    await chrome.scripting.insertCSS({
+      target: { tabId },
+      files: ['content/linguaflow.css'],
+    });
+  }
+}
 
 export function setupContextMenus(): void {
   chrome.contextMenus.create({
@@ -13,16 +31,22 @@ export function setupContextMenus(): void {
     contexts: ['selection'],
   });
 
-  chrome.contextMenus.onClicked.addListener((info, tab) => {
+  chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     if (!tab?.id) return;
 
-    if (info.menuItemId === 'translate-page') {
-      sendToContent(tab.id, { type: 'TRANSLATE_PAGE' }).catch(() => {});
-    } else if (info.menuItemId === 'translate-selection' && info.selectionText) {
-      sendToContent(tab.id, {
-        type: 'TRANSLATE_SELECTION',
-        payload: { text: info.selectionText },
-      }).catch(() => {});
+    try {
+      await ensureContentScript(tab.id);
+
+      if (info.menuItemId === 'translate-page') {
+        await sendToContent(tab.id, { type: 'TRANSLATE_PAGE' });
+      } else if (info.menuItemId === 'translate-selection' && info.selectionText) {
+        await sendToContent(tab.id, {
+          type: 'TRANSLATE_SELECTION',
+          payload: { text: info.selectionText },
+        });
+      }
+    } catch (err) {
+      logger.error('Context menu action failed:', err);
     }
   });
 }

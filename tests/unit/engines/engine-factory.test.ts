@@ -6,6 +6,11 @@ import { DeepLEngine } from '@/engines/deepl-engine';
 import { OpenAIEngine } from '@/engines/openai-engine';
 import { ClaudeEngine } from '@/engines/claude-engine';
 import { MicrosoftTranslateEngine } from '@/engines/microsoft-engine';
+import { BingFreeEngine } from '@/engines/bing-free-engine';
+import { YandexEngine } from '@/engines/yandex-engine';
+import { LingvaEngine } from '@/engines/lingva-engine';
+import { MyMemoryEngine } from '@/engines/mymemory-engine';
+import { LibreTranslateEngine } from '@/engines/libre-engine';
 
 describe('createEngine', () => {
   it('creates GoogleTranslateEngine for GOOGLE_FREE', () => {
@@ -13,6 +18,41 @@ describe('createEngine', () => {
       engine: TranslationEngine.GOOGLE_FREE,
     });
     expect(engine).toBeInstanceOf(GoogleTranslateEngine);
+  });
+
+  it('creates BingFreeEngine for BING_FREE', () => {
+    const engine = createEngine(TranslationEngine.BING_FREE, {
+      engine: TranslationEngine.BING_FREE,
+    });
+    expect(engine).toBeInstanceOf(BingFreeEngine);
+  });
+
+  it('creates YandexEngine for YANDEX', () => {
+    const engine = createEngine(TranslationEngine.YANDEX, {
+      engine: TranslationEngine.YANDEX,
+    });
+    expect(engine).toBeInstanceOf(YandexEngine);
+  });
+
+  it('creates LingvaEngine for LINGVA', () => {
+    const engine = createEngine(TranslationEngine.LINGVA, {
+      engine: TranslationEngine.LINGVA,
+    });
+    expect(engine).toBeInstanceOf(LingvaEngine);
+  });
+
+  it('creates MyMemoryEngine for MYMEMORY', () => {
+    const engine = createEngine(TranslationEngine.MYMEMORY, {
+      engine: TranslationEngine.MYMEMORY,
+    });
+    expect(engine).toBeInstanceOf(MyMemoryEngine);
+  });
+
+  it('creates LibreTranslateEngine for LIBRE_TRANSLATE', () => {
+    const engine = createEngine(TranslationEngine.LIBRE_TRANSLATE, {
+      engine: TranslationEngine.LIBRE_TRANSLATE,
+    });
+    expect(engine).toBeInstanceOf(LibreTranslateEngine);
   });
 
   it('creates DeepLEngine for DEEPL', () => {

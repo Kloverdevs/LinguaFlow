@@ -132,10 +132,22 @@ function cancelPending(): void {
   activeHoverEl = null;
 }
 
+/** Check if element is part of LinguaFlow's own UI (FAB, menu, onboarding, tooltip) */
+function isLinguaFlowElement(el: HTMLElement): boolean {
+  if (el.id?.startsWith('immersive-translate')) return true;
+  if (el.closest?.('#immersive-translate-fab')) return true;
+  if (el.closest?.('#immersive-translate-fab-menu')) return true;
+  if (el.closest?.('#immersive-translate-onboarding')) return true;
+  if (el.closest?.('.immersive-selection-tooltip')) return true;
+  if (el.classList?.contains('it-bilingual-block')) return true;
+  return false;
+}
+
 function handleMouseEnter(e: Event): void {
   if (!hoverEnabled) return;
 
   const el = e.target as HTMLElement;
+  if (isLinguaFlowElement(el)) return;
   if (el.hasAttribute('data-immersive-translated')) return;
   if (el.hasAttribute('data-immersive-block')) return;
 

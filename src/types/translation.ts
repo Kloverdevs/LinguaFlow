@@ -1,5 +1,10 @@
 export enum TranslationEngine {
   GOOGLE_FREE = 'google_free',
+  BING_FREE = 'bing_free',
+  YANDEX = 'yandex',
+  LINGVA = 'lingva',
+  MYMEMORY = 'mymemory',
+  LIBRE_TRANSLATE = 'libre_translate',
   DEEPL = 'deepl',
   OPENAI = 'openai',
   CLAUDE = 'claude',

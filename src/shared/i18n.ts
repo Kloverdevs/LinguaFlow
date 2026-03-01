@@ -1,0 +1,593 @@
+import type { UILocale } from '@/types/settings';
+
+// All UI string keys
+export interface I18nStrings {
+  // Main page
+  from: string;
+  to: string;
+  translatePage: string;
+  restoreOriginal: string;
+  translating: string;
+  apiKeyRequired: string;
+  bilingualMode: string;
+  hoverTranslate: string;
+  alwaysTranslateSite: string;
+  neverTranslateSite: string;
+  allSettings: string;
+
+  // Warning tooltip
+  apiKeyNeeded: string;
+  goToSettings: string;
+
+  // Settings page
+  settings: string;
+
+  // General section
+  general: string;
+  targetLanguage: string;
+  translationEngine: string;
+
+  // Engines section
+  engines: string;
+  showFreeEngines: string;
+  showPaidEngines: string;
+
+  // API keys section
+  apiKeys: string;
+  enterApiKey: string;
+  show: string;
+  hide: string;
+
+  // Interface section
+  interface: string;
+  popupSize: string;
+  bilingualFontSize: string;
+  fontFamily: string;
+  textColor: string;
+  italicText: string;
+  uiLanguage: string;
+
+  // FAB section
+  floatingButton: string;
+  showFab: string;
+  fabSize: string;
+
+  // Shortcuts section
+  shortcuts: string;
+  quickTranslate: string;
+  contextMenu: string;
+
+  // Data section
+  data: string;
+
+  // Free tag
+  free: string;
+
+  // Theme tooltips
+  switchToLight: string;
+  switchToDark: string;
+}
+
+const en: I18nStrings = {
+  from: 'From',
+  to: 'To',
+  translatePage: 'Translate Page',
+  restoreOriginal: 'Restore Original',
+  translating: 'Translating\u2026',
+  apiKeyRequired: 'API Key Required',
+  bilingualMode: 'Bilingual mode',
+  hoverTranslate: 'Hover translate',
+  alwaysTranslateSite: 'Always translate this site',
+  neverTranslateSite: 'Never translate this site',
+  allSettings: 'All settings',
+  apiKeyNeeded: 'API key required. Go to',
+  goToSettings: 'Settings',
+  settings: 'Settings',
+  general: 'General',
+  targetLanguage: 'Target Language',
+  translationEngine: 'Translation Engine',
+  engines: 'Engines',
+  showFreeEngines: 'Show Free Engines',
+  showPaidEngines: 'Show Paid Engines',
+  apiKeys: 'API Keys',
+  enterApiKey: 'Enter {engine} API key',
+  show: 'Show',
+  hide: 'Hide',
+  interface: 'Interface',
+  popupSize: 'Popup Size',
+  bilingualFontSize: 'Bilingual Font Size',
+  fontFamily: 'Font Family',
+  textColor: 'Text Color',
+  italicText: 'Italic Text',
+  uiLanguage: 'UI Language',
+  floatingButton: 'Floating Button',
+  showFab: 'Show Floating Button',
+  fabSize: 'Button Size',
+  shortcuts: 'Shortcuts',
+  quickTranslate: 'Quick Translate',
+  contextMenu: 'Context Menu',
+  data: 'Data',
+  free: 'Free',
+  switchToLight: 'Switch to light mode',
+  switchToDark: 'Switch to dark mode',
+};
+
+const es: I18nStrings = {
+  from: 'De',
+  to: 'A',
+  translatePage: 'Traducir p\u00e1gina',
+  restoreOriginal: 'Restaurar original',
+  translating: 'Traduciendo\u2026',
+  apiKeyRequired: 'Clave API necesaria',
+  bilingualMode: 'Modo biling\u00fce',
+  hoverTranslate: 'Traducir al pasar el cursor',
+  alwaysTranslateSite: 'Traducir siempre este sitio',
+  neverTranslateSite: 'No traducir este sitio',
+  allSettings: 'Ajustes',
+  apiKeyNeeded: 'Clave API necesaria. Ve a',
+  goToSettings: 'Ajustes',
+  settings: 'Ajustes',
+  general: 'General',
+  targetLanguage: 'Idioma de destino',
+  translationEngine: 'Motor de traducci\u00f3n',
+  engines: 'Motores',
+  showFreeEngines: 'Mostrar motores gratuitos',
+  showPaidEngines: 'Mostrar motores de pago',
+  apiKeys: 'Claves API',
+  enterApiKey: 'Ingresa la clave API de {engine}',
+  show: 'Ver',
+  hide: 'Ocultar',
+  interface: 'Interfaz',
+  popupSize: 'Tama\u00f1o del popup',
+  bilingualFontSize: 'Tama\u00f1o de fuente biling\u00fce',
+  fontFamily: 'Familia tipogr\u00e1fica',
+  textColor: 'Color de texto',
+  italicText: 'Texto en cursiva',
+  uiLanguage: 'Idioma de la interfaz',
+  floatingButton: 'Bot\u00f3n flotante',
+  showFab: 'Mostrar bot\u00f3n flotante',
+  fabSize: 'Tama\u00f1o del bot\u00f3n',
+  shortcuts: 'Atajos',
+  quickTranslate: 'Traducci\u00f3n r\u00e1pida',
+  contextMenu: 'Men\u00fa contextual',
+  data: 'Datos',
+  free: 'Gratis',
+  switchToLight: 'Cambiar a modo claro',
+  switchToDark: 'Cambiar a modo oscuro',
+};
+
+const fr: I18nStrings = {
+  from: 'De',
+  to: 'Vers',
+  translatePage: 'Traduire la page',
+  restoreOriginal: 'Restaurer l\u2019original',
+  translating: 'Traduction en cours\u2026',
+  apiKeyRequired: 'Cl\u00e9 API requise',
+  bilingualMode: 'Mode bilingue',
+  hoverTranslate: 'Traduire au survol',
+  alwaysTranslateSite: 'Toujours traduire ce site',
+  neverTranslateSite: 'Ne jamais traduire ce site',
+  allSettings: 'Param\u00e8tres',
+  apiKeyNeeded: 'Cl\u00e9 API requise. Allez dans',
+  goToSettings: 'Param\u00e8tres',
+  settings: 'Param\u00e8tres',
+  general: 'G\u00e9n\u00e9ral',
+  targetLanguage: 'Langue cible',
+  translationEngine: 'Moteur de traduction',
+  engines: 'Moteurs',
+  showFreeEngines: 'Afficher les moteurs gratuits',
+  showPaidEngines: 'Afficher les moteurs payants',
+  apiKeys: 'Cl\u00e9s API',
+  enterApiKey: 'Saisir la cl\u00e9 API {engine}',
+  show: 'Afficher',
+  hide: 'Masquer',
+  interface: 'Interface',
+  popupSize: 'Taille du popup',
+  bilingualFontSize: 'Taille de police bilingue',
+  fontFamily: 'Police de caract\u00e8res',
+  textColor: 'Couleur du texte',
+  italicText: 'Texte en italique',
+  uiLanguage: 'Langue de l\u2019interface',
+  floatingButton: 'Bouton flottant',
+  showFab: 'Afficher le bouton flottant',
+  fabSize: 'Taille du bouton',
+  shortcuts: 'Raccourcis',
+  quickTranslate: 'Traduction rapide',
+  contextMenu: 'Menu contextuel',
+  data: 'Donn\u00e9es',
+  free: 'Gratuit',
+  switchToLight: 'Passer en mode clair',
+  switchToDark: 'Passer en mode sombre',
+};
+
+const de: I18nStrings = {
+  from: 'Von',
+  to: 'Nach',
+  translatePage: 'Seite \u00fcbersetzen',
+  restoreOriginal: 'Original wiederherstellen',
+  translating: '\u00dcbersetzung l\u00e4uft\u2026',
+  apiKeyRequired: 'API-Schl\u00fcssel erforderlich',
+  bilingualMode: 'Zweisprachiger Modus',
+  hoverTranslate: 'Beim Hover \u00fcbersetzen',
+  alwaysTranslateSite: 'Diese Seite immer \u00fcbersetzen',
+  neverTranslateSite: 'Diese Seite nie \u00fcbersetzen',
+  allSettings: 'Einstellungen',
+  apiKeyNeeded: 'API-Schl\u00fcssel erforderlich. Gehe zu',
+  goToSettings: 'Einstellungen',
+  settings: 'Einstellungen',
+  general: 'Allgemein',
+  targetLanguage: 'Zielsprache',
+  translationEngine: '\u00dcbersetzungsmotor',
+  engines: 'Motoren',
+  showFreeEngines: 'Kostenlose Motoren anzeigen',
+  showPaidEngines: 'Kostenpflichtige Motoren anzeigen',
+  apiKeys: 'API-Schl\u00fcssel',
+  enterApiKey: '{engine}-API-Schl\u00fcssel eingeben',
+  show: 'Zeigen',
+  hide: 'Verbergen',
+  interface: 'Oberfl\u00e4che',
+  popupSize: 'Popup-Gr\u00f6\u00dfe',
+  bilingualFontSize: 'Zweisprachige Schriftgr\u00f6\u00dfe',
+  fontFamily: 'Schriftart',
+  textColor: 'Textfarbe',
+  italicText: 'Kursiver Text',
+  uiLanguage: 'Sprache der Oberfl\u00e4che',
+  floatingButton: 'Schwebeknopf',
+  showFab: 'Schwebeknopf anzeigen',
+  fabSize: 'Knopfgr\u00f6\u00dfe',
+  shortcuts: 'Tastenk\u00fcrzel',
+  quickTranslate: 'Schnell\u00fcbersetzen',
+  contextMenu: 'Kontextmen\u00fc',
+  data: 'Daten',
+  free: 'Kostenlos',
+  switchToLight: 'Zum hellen Modus wechseln',
+  switchToDark: 'Zum dunklen Modus wechseln',
+};
+
+const pt: I18nStrings = {
+  from: 'De',
+  to: 'Para',
+  translatePage: 'Traduzir p\u00e1gina',
+  restoreOriginal: 'Restaurar original',
+  translating: 'Traduzindo\u2026',
+  apiKeyRequired: 'Chave API necess\u00e1ria',
+  bilingualMode: 'Modo bil\u00edngue',
+  hoverTranslate: 'Traduzir ao passar o mouse',
+  alwaysTranslateSite: 'Sempre traduzir este site',
+  neverTranslateSite: 'Nunca traduzir este site',
+  allSettings: 'Configura\u00e7\u00f5es',
+  apiKeyNeeded: 'Chave API necess\u00e1ria. V\u00e1 para',
+  goToSettings: 'Configura\u00e7\u00f5es',
+  settings: 'Configura\u00e7\u00f5es',
+  general: 'Geral',
+  targetLanguage: 'Idioma de destino',
+  translationEngine: 'Motor de tradu\u00e7\u00e3o',
+  engines: 'Motores',
+  showFreeEngines: 'Mostrar motores gratuitos',
+  showPaidEngines: 'Mostrar motores pagos',
+  apiKeys: 'Chaves API',
+  enterApiKey: 'Insira a chave API do {engine}',
+  show: 'Mostrar',
+  hide: 'Ocultar',
+  interface: 'Interface',
+  popupSize: 'Tamanho do popup',
+  bilingualFontSize: 'Tamanho da fonte bil\u00edngue',
+  fontFamily: 'Fam\u00edlia da fonte',
+  textColor: 'Cor do texto',
+  italicText: 'Texto em it\u00e1lico',
+  uiLanguage: 'Idioma da interface',
+  floatingButton: 'Bot\u00e3o flutuante',
+  showFab: 'Mostrar bot\u00e3o flutuante',
+  fabSize: 'Tamanho do bot\u00e3o',
+  shortcuts: 'Atalhos',
+  quickTranslate: 'Tradu\u00e7\u00e3o r\u00e1pida',
+  contextMenu: 'Menu de contexto',
+  data: 'Dados',
+  free: 'Gr\u00e1tis',
+  switchToLight: 'Mudar para modo claro',
+  switchToDark: 'Mudar para modo escuro',
+};
+
+const zh: I18nStrings = {
+  from: '\u6e90\u8bed\u8a00',
+  to: '\u76ee\u6807\u8bed\u8a00',
+  translatePage: '\u7ffb\u8bd1\u9875\u9762',
+  restoreOriginal: '\u6062\u590d\u539f\u6587',
+  translating: '\u7ffb\u8bd1\u4e2d\u2026',
+  apiKeyRequired: '\u9700\u8981 API \u5bc6\u94a5',
+  bilingualMode: '\u53cc\u8bed\u6a21\u5f0f',
+  hoverTranslate: '\u60ac\u505c\u7ffb\u8bd1',
+  alwaysTranslateSite: '\u59cb\u7ec8\u7ffb\u8bd1\u6b64\u7f51\u7ad9',
+  neverTranslateSite: '\u4ece\u4e0d\u7ffb\u8bd1\u6b64\u7f51\u7ad9',
+  allSettings: '\u6240\u6709\u8bbe\u7f6e',
+  apiKeyNeeded: '\u9700\u8981 API \u5bc6\u94a5\u3002\u8bf7\u524d\u5f80',
+  goToSettings: '\u8bbe\u7f6e',
+  settings: '\u8bbe\u7f6e',
+  general: '\u5e38\u89c4',
+  targetLanguage: '\u76ee\u6807\u8bed\u8a00',
+  translationEngine: '\u7ffb\u8bd1\u5f15\u64ce',
+  engines: '\u5f15\u64ce',
+  showFreeEngines: '\u663e\u793a\u514d\u8d39\u5f15\u64ce',
+  showPaidEngines: '\u663e\u793a\u4ed8\u8d39\u5f15\u64ce',
+  apiKeys: 'API \u5bc6\u94a5',
+  enterApiKey: '\u8f93\u5165 {engine} API \u5bc6\u94a5',
+  show: '\u663e\u793a',
+  hide: '\u9690\u85cf',
+  interface: '\u754c\u9762',
+  popupSize: '\u5f39\u7a97\u5927\u5c0f',
+  bilingualFontSize: '\u53cc\u8bed\u5b57\u4f53\u5927\u5c0f',
+  fontFamily: '\u5b57\u4f53',
+  textColor: '\u6587\u5b57\u989c\u8272',
+  italicText: '\u659c\u4f53\u6587\u5b57',
+  uiLanguage: '\u754c\u9762\u8bed\u8a00',
+  floatingButton: '\u60ac\u6d6e\u6309\u94ae',
+  showFab: '\u663e\u793a\u60ac\u6d6e\u6309\u94ae',
+  fabSize: '\u6309\u94ae\u5927\u5c0f',
+  shortcuts: '\u5feb\u6377\u952e',
+  quickTranslate: '\u5feb\u901f\u7ffb\u8bd1',
+  contextMenu: '\u53f3\u952e\u83dc\u5355',
+  data: '\u6570\u636e',
+  free: '\u514d\u8d39',
+  switchToLight: '\u5207\u6362\u5230\u6d45\u8272\u6a21\u5f0f',
+  switchToDark: '\u5207\u6362\u5230\u6df1\u8272\u6a21\u5f0f',
+};
+
+const ja: I18nStrings = {
+  from: '\u539f\u6587',
+  to: '\u8a33\u6587',
+  translatePage: '\u30da\u30fc\u30b8\u3092\u7ffb\u8a33',
+  restoreOriginal: '\u539f\u6587\u306b\u623b\u3059',
+  translating: '\u7ffb\u8a33\u4e2d\u2026',
+  apiKeyRequired: 'API\u30ad\u30fc\u304c\u5fc5\u8981',
+  bilingualMode: '\u30d0\u30a4\u30ea\u30f3\u30ac\u30eb\u30e2\u30fc\u30c9',
+  hoverTranslate: '\u30db\u30d0\u30fc\u3067\u7ffb\u8a33',
+  alwaysTranslateSite: '\u3053\u306e\u30b5\u30a4\u30c8\u3092\u5e38\u306b\u7ffb\u8a33',
+  neverTranslateSite: '\u3053\u306e\u30b5\u30a4\u30c8\u3092\u7ffb\u8a33\u3057\u306a\u3044',
+  allSettings: '\u8a2d\u5b9a',
+  apiKeyNeeded: 'API\u30ad\u30fc\u304c\u5fc5\u8981\u3067\u3059\u3002',
+  goToSettings: '\u8a2d\u5b9a',
+  settings: '\u8a2d\u5b9a',
+  general: '\u4e00\u822c',
+  targetLanguage: '\u7ffb\u8a33\u5148\u306e\u8a00\u8a9e',
+  translationEngine: '\u7ffb\u8a33\u30a8\u30f3\u30b8\u30f3',
+  engines: '\u30a8\u30f3\u30b8\u30f3',
+  showFreeEngines: '\u7121\u6599\u30a8\u30f3\u30b8\u30f3\u3092\u8868\u793a',
+  showPaidEngines: '\u6709\u6599\u30a8\u30f3\u30b8\u30f3\u3092\u8868\u793a',
+  apiKeys: 'API\u30ad\u30fc',
+  enterApiKey: '{engine}\u306eAPI\u30ad\u30fc\u3092\u5165\u529b',
+  show: '\u8868\u793a',
+  hide: '\u975e\u8868\u793a',
+  interface: '\u30a4\u30f3\u30bf\u30fc\u30d5\u30a7\u30fc\u30b9',
+  popupSize: '\u30dd\u30c3\u30d7\u30a2\u30c3\u30d7\u306e\u30b5\u30a4\u30ba',
+  bilingualFontSize: '\u30d0\u30a4\u30ea\u30f3\u30ac\u30eb\u306e\u6587\u5b57\u30b5\u30a4\u30ba',
+  fontFamily: '\u30d5\u30a9\u30f3\u30c8',
+  textColor: '\u6587\u5b57\u8272',
+  italicText: '\u30a4\u30bf\u30ea\u30c3\u30af\u4f53',
+  uiLanguage: '\u8868\u793a\u8a00\u8a9e',
+  floatingButton: '\u30d5\u30ed\u30fc\u30c6\u30a3\u30f3\u30b0\u30dc\u30bf\u30f3',
+  showFab: '\u30d5\u30ed\u30fc\u30c6\u30a3\u30f3\u30b0\u30dc\u30bf\u30f3\u3092\u8868\u793a',
+  fabSize: '\u30dc\u30bf\u30f3\u30b5\u30a4\u30ba',
+  shortcuts: '\u30b7\u30e7\u30fc\u30c8\u30ab\u30c3\u30c8',
+  quickTranslate: '\u30af\u30a4\u30c3\u30af\u7ffb\u8a33',
+  contextMenu: '\u30b3\u30f3\u30c6\u30ad\u30b9\u30c8\u30e1\u30cb\u30e5\u30fc',
+  data: '\u30c7\u30fc\u30bf',
+  free: '\u7121\u6599',
+  switchToLight: '\u30e9\u30a4\u30c8\u30e2\u30fc\u30c9\u306b\u5207\u308a\u66ff\u3048',
+  switchToDark: '\u30c0\u30fc\u30af\u30e2\u30fc\u30c9\u306b\u5207\u308a\u66ff\u3048',
+};
+
+const ko: I18nStrings = {
+  from: '\uc6d0\ubb38',
+  to: '\ubc88\uc5ed',
+  translatePage: '\ud398\uc774\uc9c0 \ubc88\uc5ed',
+  restoreOriginal: '\uc6d0\ubb38 \ubcf5\uc6d0',
+  translating: '\ubc88\uc5ed \uc911\u2026',
+  apiKeyRequired: 'API \ud0a4 \ud544\uc694',
+  bilingualMode: '\uc774\uc911 \uc5b8\uc5b4 \ubaa8\ub4dc',
+  hoverTranslate: '\ub9c8\uc6b0\uc2a4 \uc624\ubc84 \ubc88\uc5ed',
+  alwaysTranslateSite: '\uc774 \uc0ac\uc774\ud2b8 \ud56d\uc0c1 \ubc88\uc5ed',
+  neverTranslateSite: '\uc774 \uc0ac\uc774\ud2b8 \ubc88\uc5ed \uc548 \ud568',
+  allSettings: '\uc124\uc815',
+  apiKeyNeeded: 'API \ud0a4\uac00 \ud544\uc694\ud569\ub2c8\ub2e4.',
+  goToSettings: '\uc124\uc815',
+  settings: '\uc124\uc815',
+  general: '\uc77c\ubc18',
+  targetLanguage: '\ubc88\uc5ed \ub300\uc0c1 \uc5b8\uc5b4',
+  translationEngine: '\ubc88\uc5ed \uc5d4\uc9c4',
+  engines: '\uc5d4\uc9c4',
+  showFreeEngines: '\ubb34\ub8cc \uc5d4\uc9c4 \ud45c\uc2dc',
+  showPaidEngines: '\uc720\ub8cc \uc5d4\uc9c4 \ud45c\uc2dc',
+  apiKeys: 'API \ud0a4',
+  enterApiKey: '{engine} API \ud0a4 \uc785\ub825',
+  show: '\ubcf4\uae30',
+  hide: '\uc228\uae30\uae30',
+  interface: '\uc778\ud130\ud398\uc774\uc2a4',
+  popupSize: '\ud31d\uc5c5 \ud06c\uae30',
+  bilingualFontSize: '\uc774\uc911 \uc5b8\uc5b4 \uae00\uaf34 \ud06c\uae30',
+  fontFamily: '\uae00\uaf34',
+  textColor: '\uae00\uc790 \uc0c9\uc0c1',
+  italicText: '\uae30\uc6b8\uc784\uaf34',
+  uiLanguage: '\uc778\ud130\ud398\uc774\uc2a4 \uc5b8\uc5b4',
+  floatingButton: '\ud50c\ub85c\ud305 \ubc84\ud2bc',
+  showFab: '\ud50c\ub85c\ud305 \ubc84\ud2bc \ud45c\uc2dc',
+  fabSize: '\ubc84\ud2bc \ud06c\uae30',
+  shortcuts: '\ub2e8\ucd95\ud0a4',
+  quickTranslate: '\ube60\ub978 \ubc88\uc5ed',
+  contextMenu: '\ucee8\ud14d\uc2a4\ud2b8 \uba54\ub274',
+  data: '\ub370\uc774\ud130',
+  free: '\ubb34\ub8cc',
+  switchToLight: '\ub77c\uc774\ud2b8 \ubaa8\ub4dc\ub85c \uc804\ud658',
+  switchToDark: '\ub2e4\ud06c \ubaa8\ub4dc\ub85c \uc804\ud658',
+};
+
+const ru: I18nStrings = {
+  from: '\u0421',
+  to: '\u041d\u0430',
+  translatePage: '\u041f\u0435\u0440\u0435\u0432\u0435\u0441\u0442\u0438 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0443',
+  restoreOriginal: '\u0412\u043e\u0441\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c \u043e\u0440\u0438\u0433\u0438\u043d\u0430\u043b',
+  translating: '\u041f\u0435\u0440\u0435\u0432\u043e\u0434\u2026',
+  apiKeyRequired: '\u0422\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044f API-\u043a\u043b\u044e\u0447',
+  bilingualMode: '\u0414\u0432\u0443\u044f\u0437\u044b\u0447\u043d\u044b\u0439 \u0440\u0435\u0436\u0438\u043c',
+  hoverTranslate: '\u041f\u0435\u0440\u0435\u0432\u043e\u0434 \u043f\u0440\u0438 \u043d\u0430\u0432\u0435\u0434\u0435\u043d\u0438\u0438',
+  alwaysTranslateSite: '\u0412\u0441\u0435\u0433\u0434\u0430 \u043f\u0435\u0440\u0435\u0432\u043e\u0434\u0438\u0442\u044c \u044d\u0442\u043e\u0442 \u0441\u0430\u0439\u0442',
+  neverTranslateSite: '\u041d\u0435 \u043f\u0435\u0440\u0435\u0432\u043e\u0434\u0438\u0442\u044c \u044d\u0442\u043e\u0442 \u0441\u0430\u0439\u0442',
+  allSettings: '\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438',
+  apiKeyNeeded: '\u0422\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044f API-\u043a\u043b\u044e\u0447. \u041f\u0435\u0440\u0435\u0439\u0434\u0438\u0442\u0435 \u0432',
+  goToSettings: '\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438',
+  settings: '\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438',
+  general: '\u041e\u0441\u043d\u043e\u0432\u043d\u044b\u0435',
+  targetLanguage: '\u042f\u0437\u044b\u043a \u043f\u0435\u0440\u0435\u0432\u043e\u0434\u0430',
+  translationEngine: '\u041c\u043e\u0442\u043e\u0440 \u043f\u0435\u0440\u0435\u0432\u043e\u0434\u0430',
+  engines: '\u041c\u043e\u0442\u043e\u0440\u044b',
+  showFreeEngines: '\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u044c \u0431\u0435\u0441\u043f\u043b\u0430\u0442\u043d\u044b\u0435',
+  showPaidEngines: '\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u044c \u043f\u043b\u0430\u0442\u043d\u044b\u0435',
+  apiKeys: 'API-\u043a\u043b\u044e\u0447\u0438',
+  enterApiKey: '\u0412\u0432\u0435\u0434\u0438\u0442\u0435 API-\u043a\u043b\u044e\u0447 {engine}',
+  show: '\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u044c',
+  hide: '\u0421\u043a\u0440\u044b\u0442\u044c',
+  interface: '\u0418\u043d\u0442\u0435\u0440\u0444\u0435\u0439\u0441',
+  popupSize: '\u0420\u0430\u0437\u043c\u0435\u0440 \u043e\u043a\u043d\u0430',
+  bilingualFontSize: '\u0420\u0430\u0437\u043c\u0435\u0440 \u0448\u0440\u0438\u0444\u0442\u0430',
+  fontFamily: '\u0428\u0440\u0438\u0444\u0442',
+  textColor: '\u0426\u0432\u0435\u0442 \u0442\u0435\u043a\u0441\u0442\u0430',
+  italicText: '\u041a\u0443\u0440\u0441\u0438\u0432',
+  uiLanguage: '\u042f\u0437\u044b\u043a \u0438\u043d\u0442\u0435\u0440\u0444\u0435\u0439\u0441\u0430',
+  floatingButton: '\u041f\u043b\u0430\u0432\u0430\u044e\u0449\u0430\u044f \u043a\u043d\u043e\u043f\u043a\u0430',
+  showFab: '\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u044c \u043f\u043b\u0430\u0432\u0430\u044e\u0449\u0443\u044e \u043a\u043d\u043e\u043f\u043a\u0443',
+  fabSize: '\u0420\u0430\u0437\u043c\u0435\u0440 \u043a\u043d\u043e\u043f\u043a\u0438',
+  shortcuts: '\u0413\u043e\u0440\u044f\u0447\u0438\u0435 \u043a\u043b\u0430\u0432\u0438\u0448\u0438',
+  quickTranslate: '\u0411\u044b\u0441\u0442\u0440\u044b\u0439 \u043f\u0435\u0440\u0435\u0432\u043e\u0434',
+  contextMenu: '\u041a\u043e\u043d\u0442\u0435\u043a\u0441\u0442\u043d\u043e\u0435 \u043c\u0435\u043d\u044e',
+  data: '\u0414\u0430\u043d\u043d\u044b\u0435',
+  free: '\u0411\u0435\u0441\u043f\u043b.',
+  switchToLight: '\u0421\u0432\u0435\u0442\u043b\u0430\u044f \u0442\u0435\u043c\u0430',
+  switchToDark: '\u0422\u0451\u043c\u043d\u0430\u044f \u0442\u0435\u043c\u0430',
+};
+
+const ar: I18nStrings = {
+  from: '\u0645\u0646',
+  to: '\u0625\u0644\u0649',
+  translatePage: '\u062a\u0631\u062c\u0645\u0629 \u0627\u0644\u0635\u0641\u062d\u0629',
+  restoreOriginal: '\u0627\u0633\u062a\u0639\u0627\u062f\u0629 \u0627\u0644\u0623\u0635\u0644',
+  translating: '\u062c\u0627\u0631\u064a \u0627\u0644\u062a\u0631\u062c\u0645\u0629\u2026',
+  apiKeyRequired: '\u0645\u0641\u062a\u0627\u062d API \u0645\u0637\u0644\u0648\u0628',
+  bilingualMode: '\u0627\u0644\u0648\u0636\u0639 \u062b\u0646\u0627\u0626\u064a \u0627\u0644\u0644\u063a\u0629',
+  hoverTranslate: '\u062a\u0631\u062c\u0645\u0629 \u0639\u0646\u062f \u0627\u0644\u062a\u0645\u0631\u064a\u0631',
+  alwaysTranslateSite: '\u062a\u0631\u062c\u0645\u0629 \u0647\u0630\u0627 \u0627\u0644\u0645\u0648\u0642\u0639 \u062f\u0627\u0626\u0645\u0627\u064b',
+  neverTranslateSite: '\u0639\u062f\u0645 \u062a\u0631\u062c\u0645\u0629 \u0647\u0630\u0627 \u0627\u0644\u0645\u0648\u0642\u0639',
+  allSettings: '\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a',
+  apiKeyNeeded: '\u0645\u0641\u062a\u0627\u062d API \u0645\u0637\u0644\u0648\u0628. \u0627\u0630\u0647\u0628 \u0625\u0644\u0649',
+  goToSettings: '\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a',
+  settings: '\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a',
+  general: '\u0639\u0627\u0645',
+  targetLanguage: '\u0627\u0644\u0644\u063a\u0629 \u0627\u0644\u0645\u0633\u062a\u0647\u062f\u0641\u0629',
+  translationEngine: '\u0645\u062d\u0631\u0643 \u0627\u0644\u062a\u0631\u062c\u0645\u0629',
+  engines: '\u0627\u0644\u0645\u062d\u0631\u0643\u0627\u062a',
+  showFreeEngines: '\u0625\u0638\u0647\u0627\u0631 \u0627\u0644\u0645\u062d\u0631\u0643\u0627\u062a \u0627\u0644\u0645\u062c\u0627\u0646\u064a\u0629',
+  showPaidEngines: '\u0625\u0638\u0647\u0627\u0631 \u0627\u0644\u0645\u062d\u0631\u0643\u0627\u062a \u0627\u0644\u0645\u062f\u0641\u0648\u0639\u0629',
+  apiKeys: '\u0645\u0641\u0627\u062a\u064a\u062d API',
+  enterApiKey: '\u0623\u062f\u062e\u0644 \u0645\u0641\u062a\u0627\u062d API \u0644\u0640 {engine}',
+  show: '\u0625\u0638\u0647\u0627\u0631',
+  hide: '\u0625\u062e\u0641\u0627\u0621',
+  interface: '\u0627\u0644\u0648\u0627\u062c\u0647\u0629',
+  popupSize: '\u062d\u062c\u0645 \u0627\u0644\u0646\u0627\u0641\u0630\u0629',
+  bilingualFontSize: '\u062d\u062c\u0645 \u062e\u0637 \u0627\u0644\u062a\u0631\u062c\u0645\u0629',
+  fontFamily: '\u0646\u0648\u0639 \u0627\u0644\u062e\u0637',
+  textColor: '\u0644\u0648\u0646 \u0627\u0644\u0646\u0635',
+  italicText: '\u0646\u0635 \u0645\u0627\u0626\u0644',
+  uiLanguage: '\u0644\u063a\u0629 \u0627\u0644\u0648\u0627\u062c\u0647\u0629',
+  floatingButton: '\u0627\u0644\u0632\u0631 \u0627\u0644\u0639\u0627\u0626\u0645',
+  showFab: '\u0625\u0638\u0647\u0627\u0631 \u0627\u0644\u0632\u0631 \u0627\u0644\u0639\u0627\u0626\u0645',
+  fabSize: '\u062d\u062c\u0645 \u0627\u0644\u0632\u0631',
+  shortcuts: '\u0627\u062e\u062a\u0635\u0627\u0631\u0627\u062a',
+  quickTranslate: '\u062a\u0631\u062c\u0645\u0629 \u0633\u0631\u064a\u0639\u0629',
+  contextMenu: '\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u064a\u0627\u0642',
+  data: '\u0627\u0644\u0628\u064a\u0627\u043d\u0627\u062a',
+  free: '\u0645\u062c\u0627\u0646\u064a',
+  switchToLight: '\u0627\u0644\u062a\u0628\u062f\u064a\u0644 \u0625\u0644\u0649 \u0627\u0644\u0648\u0636\u0639 \u0627\u0644\u0641\u0627\u062a\u062d',
+  switchToDark: '\u0627\u0644\u062a\u0628\u062f\u064a\u0644 \u0625\u0644\u0649 \u0627\u0644\u0648\u0636\u0639 \u0627\u0644\u062f\u0627\u0643\u0646',
+};
+
+const it: I18nStrings = {
+  from: 'Da',
+  to: 'A',
+  translatePage: 'Traduci pagina',
+  restoreOriginal: 'Ripristina originale',
+  translating: 'Traduzione in corso\u2026',
+  apiKeyRequired: 'Chiave API necessaria',
+  bilingualMode: 'Modalit\u00e0 bilingue',
+  hoverTranslate: 'Traduci al passaggio del mouse',
+  alwaysTranslateSite: 'Traduci sempre questo sito',
+  neverTranslateSite: 'Non tradurre mai questo sito',
+  allSettings: 'Impostazioni',
+  apiKeyNeeded: 'Chiave API necessaria. Vai a',
+  goToSettings: 'Impostazioni',
+  settings: 'Impostazioni',
+  general: 'Generale',
+  targetLanguage: 'Lingua di destinazione',
+  translationEngine: 'Motore di traduzione',
+  engines: 'Motori',
+  showFreeEngines: 'Mostra motori gratuiti',
+  showPaidEngines: 'Mostra motori a pagamento',
+  apiKeys: 'Chiavi API',
+  enterApiKey: 'Inserisci la chiave API di {engine}',
+  show: 'Mostra',
+  hide: 'Nascondi',
+  interface: 'Interfaccia',
+  popupSize: 'Dimensione popup',
+  bilingualFontSize: 'Dimensione carattere bilingue',
+  fontFamily: 'Tipo di carattere',
+  textColor: 'Colore del testo',
+  italicText: 'Testo corsivo',
+  uiLanguage: 'Lingua dell\u2019interfaccia',
+  floatingButton: 'Pulsante flottante',
+  showFab: 'Mostra pulsante flottante',
+  fabSize: 'Dimensione pulsante',
+  shortcuts: 'Scorciatoie',
+  quickTranslate: 'Traduzione rapida',
+  contextMenu: 'Menu contestuale',
+  data: 'Dati',
+  free: 'Gratis',
+  switchToLight: 'Passa alla modalit\u00e0 chiara',
+  switchToDark: 'Passa alla modalit\u00e0 scura',
+};
+
+const locales: Record<string, I18nStrings> = {
+  en, es, fr, de, pt, zh, ja, ko, ru, ar, it,
+};
+
+// Map of locale code to display name (in its own language) with flag
+export const UI_LOCALE_OPTIONS: { code: UILocale; name: string; flag: string }[] = [
+  { code: 'auto', name: 'Auto', flag: '\ud83c\udf10' },
+  { code: 'en', name: 'English', flag: '\ud83c\uddfa\ud83c\uddf8' },
+  { code: 'es', name: 'Espa\u00f1ol', flag: '\ud83c\uddea\ud83c\uddf8' },
+  { code: 'fr', name: 'Fran\u00e7ais', flag: '\ud83c\uddeb\ud83c\uddf7' },
+  { code: 'de', name: 'Deutsch', flag: '\ud83c\udde9\ud83c\uddea' },
+  { code: 'pt', name: 'Portugu\u00eas', flag: '\ud83c\udde7\ud83c\uddf7' },
+  { code: 'it', name: 'Italiano', flag: '\ud83c\uddee\ud83c\uddf9' },
+  { code: 'zh', name: '\u4e2d\u6587', flag: '\ud83c\udde8\ud83c\uddf3' },
+  { code: 'ja', name: '\u65e5\u672c\u8a9e', flag: '\ud83c\uddef\ud83c\uddf5' },
+  { code: 'ko', name: '\ud55c\uad6d\uc5b4', flag: '\ud83c\uddf0\ud83c\uddf7' },
+  { code: 'ru', name: '\u0420\u0443\u0441\u0441\u043a\u0438\u0439', flag: '\ud83c\uddf7\ud83c\uddfa' },
+  { code: 'ar', name: '\u0627\u0644\u0639\u0631\u0628\u064a\u0629', flag: '\ud83c\uddf8\ud83c\udde6' },
+];
+
+/** Detect browser language and map to our supported locales */
+function detectBrowserLocale(): string {
+  const lang = navigator.language || (navigator as unknown as { userLanguage?: string }).userLanguage || 'en';
+  const base = lang.split('-')[0].toLowerCase();
+  if (locales[base]) return base;
+  return 'en';
+}
+
+/** Get the resolved locale code (handles 'auto') */
+export function resolveLocale(uiLocale: UILocale): string {
+  if (uiLocale === 'auto') return detectBrowserLocale();
+  return uiLocale;
+}
+
+/** Get translation strings for a given locale setting */
+export function getStrings(uiLocale: UILocale): I18nStrings {
+  const resolved = resolveLocale(uiLocale);
+  return locales[resolved] ?? en;
+}
