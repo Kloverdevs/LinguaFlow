@@ -19,6 +19,7 @@ type FabCallbacks = {
   onRemoveTranslations: () => void;
   onToggleHover: (enabled: boolean) => void;
   onToggleMode: () => void;
+  onReaderMode: () => void;
   isActive: () => boolean;
   isHoverEnabled: () => boolean;
   getDisplayMode: () => DisplayMode;
@@ -29,6 +30,7 @@ export type FabLabels = {
   restoreOriginal: string;
   bilingualMode: string;
   hoverTranslate: string;
+  readerMode: string;
 };
 
 let callbacks: FabCallbacks;
@@ -89,6 +91,11 @@ function buildMenuHTML(labels: FabLabels): void {
       <span class="immersive-fab-menu-icon">&#9786;</span>
       <span>${labels.hoverTranslate}</span>
       <span class="immersive-fab-menu-badge">OFF</span>
+    </button>
+    <div class="immersive-fab-menu-divider"></div>
+    <button class="immersive-fab-menu-item" data-action="reader">
+      <span class="immersive-fab-menu-icon">&#128214;</span>
+      <span>${labels.readerMode}</span>
     </button>
   `;
   // Re-bind click handlers
@@ -282,6 +289,9 @@ function handleMenuAction(e: Event): void {
       callbacks.onToggleHover(!callbacks.isHoverEnabled());
       updateMenuState();
       return; // Don't close menu
+    case 'reader':
+      callbacks.onReaderMode();
+      break;
   }
 
   closeMenu();
@@ -290,6 +300,20 @@ function handleMenuAction(e: Event): void {
 export function updateFabState(): void {
   if (!fab) return;
   fab.classList.toggle('translating', callbacks.isActive());
+  // Remove progress when state changes
+  const badge = fab.querySelector('.it-fab-progress');
+  if (badge) badge.remove();
+}
+
+export function updateFabProgress(current: number, total: number): void {
+  if (!fab) return;
+  let badge = fab.querySelector('.it-fab-progress') as HTMLElement;
+  if (!badge) {
+    badge = document.createElement('span');
+    badge.className = 'it-fab-progress';
+    fab.appendChild(badge);
+  }
+  badge.textContent = `${current}/${total}`;
 }
 
 export function destroyFloatingButton(): void {

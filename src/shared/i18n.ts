@@ -63,9 +63,28 @@ export interface I18nStrings {
   // Free tag
   free: string;
 
+  // Formality
+  formality: string;
+  formalityAuto: string;
+  formalityFormal: string;
+  formalityInformal: string;
+
   // Theme tooltips
   switchToLight: string;
   switchToDark: string;
+
+  // New keys from instruction
+  optionsTitle: string;
+  saveBtn: string;
+  settingsSaved: string;
+  engineLabel: string;
+  sourceLangLabel: string;
+  targetLangLabel: string;
+  fabTranslatePage: string;
+  fabRestoreOriginal: string;
+  fabBilingualMode: string;
+  fabHoverTranslate: string;
+  readerMode: string;
 }
 
 const en: I18nStrings = {
@@ -108,8 +127,23 @@ const en: I18nStrings = {
   contextMenu: 'Context Menu',
   data: 'Data',
   free: 'Free',
+  formality: 'Formality',
+  formalityAuto: 'Auto',
+  formalityFormal: 'Formal',
+  formalityInformal: 'Informal',
   switchToLight: 'Switch to light mode',
   switchToDark: 'Switch to dark mode',
+  optionsTitle: 'LinguaFlow Settings',
+  saveBtn: 'Save Settings',
+  settingsSaved: 'Saved successfully!',
+  engineLabel: 'Translation Engine',
+  sourceLangLabel: 'Source Language',
+  targetLangLabel: 'Target Language',
+  fabTranslatePage: 'Translate Page',
+  fabRestoreOriginal: 'Restore Original',
+  fabBilingualMode: 'Bilingual Mode',
+  fabHoverTranslate: 'Hover Translate',
+  readerMode: 'Reader Mode',
 };
 
 const es: I18nStrings = {
@@ -152,8 +186,23 @@ const es: I18nStrings = {
   contextMenu: 'Men\u00fa contextual',
   data: 'Datos',
   free: 'Gratis',
+  formality: 'Formalidad',
+  formalityAuto: 'Automático',
+  formalityFormal: 'Formal',
+  formalityInformal: 'Informal',
   switchToLight: 'Cambiar a modo claro',
   switchToDark: 'Cambiar a modo oscuro',
+  optionsTitle: 'LinguaFlow Settings',
+  saveBtn: 'Save Settings',
+  settingsSaved: 'Saved successfully!',
+  engineLabel: 'Translation Engine',
+  sourceLangLabel: 'Source Language',
+  targetLangLabel: 'Target Language',
+  fabTranslatePage: 'Translate Page',
+  fabRestoreOriginal: 'Restore Original',
+  fabBilingualMode: 'Bilingual Mode',
+  fabHoverTranslate: 'Hover Translate',
+  readerMode: 'Reader Mode',
 };
 
 const fr: I18nStrings = {
@@ -196,8 +245,23 @@ const fr: I18nStrings = {
   contextMenu: 'Menu contextuel',
   data: 'Donn\u00e9es',
   free: 'Gratuit',
+  formality: 'Registre',
+  formalityAuto: 'Automatique',
+  formalityFormal: 'Formel',
+  formalityInformal: 'Informel',
   switchToLight: 'Passer en mode clair',
   switchToDark: 'Passer en mode sombre',
+  optionsTitle: 'LinguaFlow Settings',
+  saveBtn: 'Save Settings',
+  settingsSaved: 'Saved successfully!',
+  engineLabel: 'Translation Engine',
+  sourceLangLabel: 'Source Language',
+  targetLangLabel: 'Target Language',
+  fabTranslatePage: 'Translate Page',
+  fabRestoreOriginal: 'Restore Original',
+  fabBilingualMode: 'Bilingual Mode',
+  fabHoverTranslate: 'Hover Translate',
+  readerMode: 'Reader Mode',
 };
 
 const de: I18nStrings = {
@@ -240,8 +304,23 @@ const de: I18nStrings = {
   contextMenu: 'Kontextmen\u00fc',
   data: 'Daten',
   free: 'Kostenlos',
+  formality: 'Formalität',
+  formalityAuto: 'Automatisch',
+  formalityFormal: 'Formell',
+  formalityInformal: 'Informell',
   switchToLight: 'Zum hellen Modus wechseln',
   switchToDark: 'Zum dunklen Modus wechseln',
+  optionsTitle: 'LinguaFlow Settings',
+  saveBtn: 'Save Settings',
+  settingsSaved: 'Saved successfully!',
+  engineLabel: 'Translation Engine',
+  sourceLangLabel: 'Source Language',
+  targetLangLabel: 'Target Language',
+  fabTranslatePage: 'Translate Page',
+  fabRestoreOriginal: 'Restore Original',
+  fabBilingualMode: 'Bilingual Mode',
+  fabHoverTranslate: 'Hover Translate',
+  readerMode: 'Reader Mode',
 };
 
 const pt: I18nStrings = {
@@ -284,8 +363,23 @@ const pt: I18nStrings = {
   contextMenu: 'Menu de contexto',
   data: 'Dados',
   free: 'Gr\u00e1tis',
+  formality: 'Formalidade',
+  formalityAuto: 'Automático',
+  formalityFormal: 'Formal',
+  formalityInformal: 'Informal',
   switchToLight: 'Mudar para modo claro',
   switchToDark: 'Mudar para modo escuro',
+  optionsTitle: 'LinguaFlow Settings',
+  saveBtn: 'Save Settings',
+  settingsSaved: 'Saved successfully!',
+  engineLabel: 'Translation Engine',
+  sourceLangLabel: 'Source Language',
+  targetLangLabel: 'Target Language',
+  fabTranslatePage: 'Translate Page',
+  fabRestoreOriginal: 'Restore Original',
+  fabBilingualMode: 'Bilingual Mode',
+  fabHoverTranslate: 'Hover Translate',
+  readerMode: 'Reader Mode',
 };
 
 const zh: I18nStrings = {
@@ -328,8 +422,23 @@ const zh: I18nStrings = {
   contextMenu: '\u53f3\u952e\u83dc\u5355',
   data: '\u6570\u636e',
   free: '\u514d\u8d39',
+  formality: '\u8bed\u4f53',
+  formalityAuto: '\u81ea\u52a8',
+  formalityFormal: '\u6b63\u5f0f',
+  formalityInformal: '\u975e\u6b63\u5f0f',
   switchToLight: '\u5207\u6362\u5230\u6d45\u8272\u6a21\u5f0f',
   switchToDark: '\u5207\u6362\u5230\u6df1\u8272\u6a21\u5f0f',
+  optionsTitle: 'LinguaFlow Settings',
+  saveBtn: 'Save Settings',
+  settingsSaved: 'Saved successfully!',
+  engineLabel: 'Translation Engine',
+  sourceLangLabel: 'Source Language',
+  targetLangLabel: 'Target Language',
+  fabTranslatePage: 'Translate Page',
+  fabRestoreOriginal: 'Restore Original',
+  fabBilingualMode: 'Bilingual Mode',
+  fabHoverTranslate: 'Hover Translate',
+  readerMode: 'Reader Mode',
 };
 
 const ja: I18nStrings = {
@@ -372,8 +481,23 @@ const ja: I18nStrings = {
   contextMenu: '\u30b3\u30f3\u30c6\u30ad\u30b9\u30c8\u30e1\u30cb\u30e5\u30fc',
   data: '\u30c7\u30fc\u30bf',
   free: '\u7121\u6599',
+  formality: '\u6587\u4f53',
+  formalityAuto: '\u81ea\u52d5',
+  formalityFormal: '\u4e01\u5be7',
+  formalityInformal: '\u30ab\u30b8\u30e5\u30a2\u30eb',
   switchToLight: '\u30e9\u30a4\u30c8\u30e2\u30fc\u30c9\u306b\u5207\u308a\u66ff\u3048',
   switchToDark: '\u30c0\u30fc\u30af\u30e2\u30fc\u30c9\u306b\u5207\u308a\u66ff\u3048',
+  optionsTitle: 'LinguaFlow Settings',
+  saveBtn: 'Save Settings',
+  settingsSaved: 'Saved successfully!',
+  engineLabel: 'Translation Engine',
+  sourceLangLabel: 'Source Language',
+  targetLangLabel: 'Target Language',
+  fabTranslatePage: 'Translate Page',
+  fabRestoreOriginal: 'Restore Original',
+  fabBilingualMode: 'Bilingual Mode',
+  fabHoverTranslate: 'Hover Translate',
+  readerMode: 'Reader Mode',
 };
 
 const ko: I18nStrings = {
@@ -416,8 +540,23 @@ const ko: I18nStrings = {
   contextMenu: '\ucee8\ud14d\uc2a4\ud2b8 \uba54\ub274',
   data: '\ub370\uc774\ud130',
   free: '\ubb34\ub8cc',
+  formality: '\ubb38\uccb4',
+  formalityAuto: '\uc790\ub3d9',
+  formalityFormal: '\uacf5\uc2dd\uc801',
+  formalityInformal: '\ube44\uacf5\uc2dd\uc801',
   switchToLight: '\ub77c\uc774\ud2b8 \ubaa8\ub4dc\ub85c \uc804\ud658',
   switchToDark: '\ub2e4\ud06c \ubaa8\ub4dc\ub85c \uc804\ud658',
+  optionsTitle: 'LinguaFlow Settings',
+  saveBtn: 'Save Settings',
+  settingsSaved: 'Saved successfully!',
+  engineLabel: 'Translation Engine',
+  sourceLangLabel: 'Source Language',
+  targetLangLabel: 'Target Language',
+  fabTranslatePage: 'Translate Page',
+  fabRestoreOriginal: 'Restore Original',
+  fabBilingualMode: 'Bilingual Mode',
+  fabHoverTranslate: 'Hover Translate',
+  readerMode: 'Reader Mode',
 };
 
 const ru: I18nStrings = {
@@ -460,8 +599,23 @@ const ru: I18nStrings = {
   contextMenu: '\u041a\u043e\u043d\u0442\u0435\u043a\u0441\u0442\u043d\u043e\u0435 \u043c\u0435\u043d\u044e',
   data: '\u0414\u0430\u043d\u043d\u044b\u0435',
   free: '\u0411\u0435\u0441\u043f\u043b.',
+  formality: '\u0420\u0435\u0433\u0438\u0441\u0442\u0440',
+  formalityAuto: '\u0410\u0432\u0442\u043e',
+  formalityFormal: '\u0424\u043e\u0440\u043c\u0430\u043b\u044c\u043d\u044b\u0439',
+  formalityInformal: '\u041d\u0435\u0444\u043e\u0440\u043c\u0430\u043b\u044c\u043d\u044b\u0439',
   switchToLight: '\u0421\u0432\u0435\u0442\u043b\u0430\u044f \u0442\u0435\u043c\u0430',
   switchToDark: '\u0422\u0451\u043c\u043d\u0430\u044f \u0442\u0435\u043c\u0430',
+  optionsTitle: 'LinguaFlow Settings',
+  saveBtn: 'Save Settings',
+  settingsSaved: 'Saved successfully!',
+  engineLabel: 'Translation Engine',
+  sourceLangLabel: 'Source Language',
+  targetLangLabel: 'Target Language',
+  fabTranslatePage: 'Translate Page',
+  fabRestoreOriginal: 'Restore Original',
+  fabBilingualMode: 'Bilingual Mode',
+  fabHoverTranslate: 'Hover Translate',
+  readerMode: 'Reader Mode',
 };
 
 const ar: I18nStrings = {
@@ -504,8 +658,23 @@ const ar: I18nStrings = {
   contextMenu: '\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0633\u064a\u0627\u0642',
   data: '\u0627\u0644\u0628\u064a\u0627\u043d\u0627\u062a',
   free: '\u0645\u062c\u0627\u0646\u064a',
+  formality: '\u0627\u0644\u0623\u0633\u0644\u0648\u0628',
+  formalityAuto: '\u062a\u0644\u0642\u0627\u0626\u064a',
+  formalityFormal: '\u0631\u0633\u0645\u064a',
+  formalityInformal: '\u063a\u064a\u0631 \u0631\u0633\u0645\u064a',
   switchToLight: '\u0627\u0644\u062a\u0628\u062f\u064a\u0644 \u0625\u0644\u0649 \u0627\u0644\u0648\u0636\u0639 \u0627\u0644\u0641\u0627\u062a\u062d',
   switchToDark: '\u0627\u0644\u062a\u0628\u062f\u064a\u0644 \u0625\u0644\u0649 \u0627\u0644\u0648\u0636\u0639 \u0627\u0644\u062f\u0627\u0643\u0646',
+  optionsTitle: 'LinguaFlow Settings',
+  saveBtn: 'Save Settings',
+  settingsSaved: 'Saved successfully!',
+  engineLabel: 'Translation Engine',
+  sourceLangLabel: 'Source Language',
+  targetLangLabel: 'Target Language',
+  fabTranslatePage: 'Translate Page',
+  fabRestoreOriginal: 'Restore Original',
+  fabBilingualMode: 'Bilingual Mode',
+  fabHoverTranslate: 'Hover Translate',
+  readerMode: 'Reader Mode',
 };
 
 const it: I18nStrings = {
@@ -548,8 +717,23 @@ const it: I18nStrings = {
   contextMenu: 'Menu contestuale',
   data: 'Dati',
   free: 'Gratis',
+  formality: 'Registro',
+  formalityAuto: 'Automatico',
+  formalityFormal: 'Formale',
+  formalityInformal: 'Informale',
   switchToLight: 'Passa alla modalit\u00e0 chiara',
   switchToDark: 'Passa alla modalit\u00e0 scura',
+  optionsTitle: 'LinguaFlow Settings',
+  saveBtn: 'Save Settings',
+  settingsSaved: 'Saved successfully!',
+  engineLabel: 'Translation Engine',
+  sourceLangLabel: 'Source Language',
+  targetLangLabel: 'Target Language',
+  fabTranslatePage: 'Translate Page',
+  fabRestoreOriginal: 'Restore Original',
+  fabBilingualMode: 'Bilingual Mode',
+  fabHoverTranslate: 'Hover Translate',
+  readerMode: 'Reader Mode',
 };
 
 const locales: Record<string, I18nStrings> = {

@@ -136,10 +136,10 @@ function hasBlockTranslatableChild(el: HTMLElement): boolean {
  *  3. Container tags (DIV, SECTION, etc.) → translate if they have inline text content
  *     not already covered by block-level children
  */
-export function walkDOM(root?: Element): TranslatableNode[] {
+export async function walkDOMAsync(root?: Element): Promise<TranslatableNode[]> {
   const contentRoot = root ?? document.body;
   const nodes: TranslatableNode[] = [];
-  const seen = new Set<HTMLElement>();
+  const seen = new WeakSet<HTMLElement>();
 
   const walker = document.createTreeWalker(
     contentRoot,
@@ -156,8 +156,15 @@ export function walkDOM(root?: Element): TranslatableNode[] {
   );
 
   let current = walker.nextNode();
+  let iterations = 0;
+
   while (current) {
     const el = current as HTMLElement;
+    
+    // Yield to the main thread every 200 nodes to prevent UI freezing on massive pages
+    if (++iterations % 200 === 0) {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
 
     if (
       !el.hasAttribute('data-immersive-translated') &&
@@ -223,7 +230,7 @@ export function walkDOM(root?: Element): TranslatableNode[] {
  * Mark all inline children of a block element as "seen" so they're not
  * double-translated.
  */
-function markInlineChildrenSeen(el: HTMLElement, seen: Set<HTMLElement>): void {
+function markInlineChildrenSeen(el: HTMLElement, seen: WeakSet<HTMLElement>): void {
   for (const child of el.querySelectorAll('*')) {
     if (INLINE_TRANSLATABLE_TAGS.has(child.tagName)) {
       seen.add(child as HTMLElement);

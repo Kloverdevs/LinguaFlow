@@ -21,8 +21,13 @@ export const DEFAULT_SETTINGS: UserSettings = {
   showPaidEngines: true,
   autoTranslateSites: [],
   neverTranslateSites: [],
+  siteRules: [],
   popupScale: 1,
   uiLocale: 'auto',
   fabEnabled: true,
   fabSize: 48,
+  formality: 'auto',
+  compareEngine: undefined,
+  enableSync: false,
+  dyslexiaFont: false,
 };

@@ -1,25 +1,39 @@
 import './content.css';
-import { walkDOM } from './dom-walker';
+import './video-subtitles.css';
+import './dictionary-popup.css';
+import './selection-popup.css';
+import './reading-mode.css';
+import { initVideoSubtitles, updateVideoSubtitleLanguage } from './video-subtitles';
+import { initLiveCaptions, updateLiveCaptionsLanguage } from './live-captions';
+import { initPdfHandler, isPdfPage } from './pdf-handler';
+import { toggleReadingMode } from './reading-mode';
+import { setupDictionaryListener } from './dictionary-popup';
+import { showSelectionPopup } from './selection-popup';
+import { walkDOMAsync } from './dom-walker';
 import {
   showLoading,
   replaceLoading,
   showError,
   removeAllTranslations,
   setDisplayMode,
+  setDyslexiaFont,
 } from './translator-ui';
 import { enableHover, disableHover, updateHoverLang } from './hover-handler';
 import { startObserving, stopObserving } from './mutation-observer';
 import { createFloatingButton, updateFabState, updateFabLabels, updateFabSize, setFabVisible } from './floating-button';
 import type { FabLabels } from './floating-button';
 import { showOnboardingIfNeeded } from './onboarding';
+import { showImageTranslationModal } from './image-translator';
 import { sendToBackground } from '@/shared/message-bus';
 import { onSettingsChanged, getSettings, updateSettings } from '@/shared/storage';
+import { getActiveSiteRule } from '@/shared/site-rulesHelper';
 import { getStrings } from '@/shared/i18n';
-import { TranslationResult } from '@/types/translation';
+import { TranslationResult, TranslationEngine } from '@/types/translation';
 import { MessageToContent, MessageResponse } from '@/types/messages';
 import { UserSettings, DisplayMode } from '@/types/settings';
 import { TranslatableNode } from '@/types/dom';
 import { logger } from '@/shared/logger';
+import { initProgressIndicator, showProgress, updateProgress, hideProgress } from './translation-progress';
 
 let isActive = false;
 let hoverEnabled = false;
@@ -36,6 +50,7 @@ function getFabLabels(settings: UserSettings): FabLabels {
     restoreOriginal: t.restoreOriginal,
     bilingualMode: t.bilingualMode,
     hoverTranslate: t.hoverTranslate,
+    readerMode: t.readerMode,
   };
 }
 
@@ -48,6 +63,7 @@ document.addEventListener('contextmenu', (e) => {
 (async () => {
   currentSettings = await getSettings();
   setDisplayMode(currentSettings.displayMode);
+  setDyslexiaFont(!!currentSettings.dyslexiaFont);
   logger.info('Content script loaded');
 
   // Show onboarding if first time
@@ -85,12 +101,27 @@ document.addEventListener('contextmenu', (e) => {
     isActive: () => isActive,
     isHoverEnabled: () => hoverEnabled,
     getDisplayMode: () => currentSettings?.displayMode ?? 'replace',
+    onReaderMode: () => {
+      toggleReadingMode();
+    }
   }, getFabLabels(currentSettings), fabSize);
 
   // Apply FAB visibility
   if (currentSettings.fabEnabled === false) {
     setFabVisible(false);
   }
+
+  // Initialize video subtitles (only activates on supported hostnames)
+  initVideoSubtitles();
+  
+  // Initialize meeting live captions
+  initLiveCaptions();
+
+  // Initialize PDF handler
+  initPdfHandler();
+
+  // Initialize Dictionary popup listener
+  setupDictionaryListener();
 
   // Listen for settings changes
   onSettingsChanged((newSettings) => {
@@ -100,6 +131,7 @@ document.addEventListener('contextmenu', (e) => {
     const prevFabEnabled = currentSettings?.fabEnabled;
     currentSettings = newSettings;
     setDisplayMode(newSettings.displayMode);
+    setDyslexiaFont(!!newSettings.dyslexiaFont);
 
     // Enable/disable hover based on hoverMode setting (works independently of page translation)
     if (newSettings.hoverMode && !prevHoverMode) {
@@ -184,19 +216,88 @@ chrome.runtime.onMessage.addListener(
 
       case 'TRANSLATE_SELECTION':
         if (message.payload?.text) {
-          translateSelection(message.payload.text);
+          const x = lastContextMenuPos.x || window.innerWidth / 2;
+          const y = lastContextMenuPos.y || window.innerHeight / 2;
+          showSelectionPopup(message.payload.text, x, y);
         }
         sendResponse({ success: true, data: null });
         return false;
 
+      case 'TRANSLATE_IMAGE':
+        if (message.payload?.srcUrl && currentSettings) {
+          showImageTranslationModal(message.payload.srcUrl, currentSettings.sourceLang, currentSettings.targetLang);
+        }
+        sendResponse({ success: true, data: null });
+        return false;
+
+      case 'TOGGLE_HOVER_MODE':
+        if (currentSettings) {
+          const newHoverState = !hoverEnabled;
+          hoverEnabled = newHoverState;
+          if (newHoverState) {
+            enableHover(currentSettings.targetLang);
+          } else {
+            disableHover();
+          }
+          updateSettings({ hoverMode: newHoverState });
+        }
+        sendResponse({ success: true, data: null });
+        return false;
+
+      case 'TRANSLATE_CURRENT_SELECTION': {
+        const text = window.getSelection()?.toString().trim();
+        if (text) {
+          const x = lastContextMenuPos.x || window.innerWidth / 2;
+          const y = lastContextMenuPos.y || window.innerHeight / 2;
+          showSelectionPopup(text, x, y);
+        }
+        sendResponse({ success: true, data: null });
+        return false;
+      }
+
       case 'SETTINGS_CHANGED': {
-        const prevMode = currentSettings?.displayMode;
+        const prev = currentSettings;
         currentSettings = message.payload;
         setDisplayMode(currentSettings.displayMode);
+        setDyslexiaFont(!!currentSettings.dyslexiaFont);
         applyTranslationStyles(currentSettings);
 
+        // FAB visibility
+        if (currentSettings.fabEnabled !== prev?.fabEnabled) {
+          setFabVisible(currentSettings.fabEnabled !== false);
+        }
+
+        // FAB size
+        if (currentSettings.fabSize !== prev?.fabSize) {
+          updateFabSize(currentSettings.fabSize ?? 48);
+        }
+
+        // FAB labels (locale change)
+        if (currentSettings.uiLocale !== prev?.uiLocale) {
+          updateFabLabels(getFabLabels(currentSettings));
+        }
+
+        // Hover mode
+        if (currentSettings.hoverMode && !prev?.hoverMode) {
+          hoverEnabled = true;
+          enableHover(currentSettings.targetLang);
+        } else if (!currentSettings.hoverMode && prev?.hoverMode) {
+          hoverEnabled = false;
+          disableHover();
+        }
+
+        if (hoverEnabled) {
+          updateHoverLang(currentSettings.targetLang);
+        }
+
+        // Update video subtitles language
+        if (currentSettings.targetLang !== prev?.targetLang) {
+          updateVideoSubtitleLanguage(currentSettings.targetLang);
+          updateLiveCaptionsLanguage(currentSettings.targetLang);
+        }
+
         // If display mode changed while translation is active, re-translate
-        if (isActive && prevMode !== currentSettings.displayMode) {
+        if (isActive && prev?.displayMode !== currentSettings.displayMode) {
           removeAllTranslations();
           translatePage().then(() => sendResponse({ success: true, data: null }));
           return true;
@@ -213,11 +314,15 @@ chrome.runtime.onMessage.addListener(
 );
 
 async function translatePage(): Promise<void> {
+  if (isPdfPage()) return; // PDF handles translation natively in its own side panel
+
   // Prevent concurrent translate calls (rapid clicks)
   if (isTranslating) {
     logger.info('Translation already in progress, skipping');
     return;
   }
+
+  await initProgressIndicator();
 
   if (!currentSettings) {
     currentSettings = await getSettings();
@@ -230,11 +335,17 @@ async function translatePage(): Promise<void> {
   applyTranslationStyles(currentSettings);
 
   try {
-    const nodes = walkDOM();
+    const nodes = await walkDOMAsync();
     logger.info(`Found ${nodes.length} translatable nodes`);
 
+    const activeRule = getActiveSiteRule(currentSettings);
+    const targetLang = activeRule?.targetLang || currentSettings.targetLang;
+    const engine = activeRule?.engine;
+
     if (nodes.length > 0) {
-      await translateNodes(nodes, currentSettings.sourceLang, currentSettings.targetLang);
+      showProgress();
+      await translateNodes(nodes, currentSettings.sourceLang, targetLang, engine);
+      hideProgress();
     }
 
     if (currentSettings.hoverMode || hoverEnabled) {
@@ -243,7 +354,8 @@ async function translatePage(): Promise<void> {
 
     startObserving((newNodes) => {
       if (isActive && currentSettings) {
-        translateNodes(newNodes, currentSettings.sourceLang, currentSettings.targetLang);
+        const ar = getActiveSiteRule(currentSettings);
+        translateNodes(newNodes, currentSettings.sourceLang, ar?.targetLang || currentSettings.targetLang, ar?.engine);
       }
     });
   } finally {
@@ -254,7 +366,8 @@ async function translatePage(): Promise<void> {
 async function translateNodes(
   nodes: TranslatableNode[],
   sourceLang: string,
-  targetLang: string
+  targetLang: string,
+  engine?: TranslationEngine
 ): Promise<void> {
   if (nodes.length === 0) {
     logger.info('No translatable nodes found');
@@ -267,122 +380,145 @@ async function translateNodes(
   let translatedCount = 0;
   const totalCount = nodes.length;
 
-  for (let i = 0; i < nodes.length; i += BATCH_SIZE) {
-    // Abort if deactivated mid-translation
-    if (!isActive) {
-      logger.info('Translation cancelled (deactivated)');
-      return;
-    }
+  return new Promise<void>((resolve) => {
+    const pendingIndices = new Set(nodes.map((_, i) => i));
+    const priorityQueue: number[] = [];
+    const normalQueue: number[] = [];
+    let isProcessing = false;
 
-    const batchNodes = nodes.slice(i, i + BATCH_SIZE);
-    const batchLoaders = loaders.slice(i, i + BATCH_SIZE);
-    const texts = batchNodes.map((n) => n.originalText);
-
-    try {
-      const response = await sendToBackground<TranslationResult>({
-        type: 'TRANSLATE_REQUEST',
-        payload: { texts, sourceLang, targetLang },
-      }) as MessageResponse<TranslationResult>;
-
-      if (!response) {
-        logger.error('No response from background – service worker may have crashed');
-        for (const loader of batchLoaders) {
-          showError(loader, 'No response from background');
-        }
-        continue;
-      }
-
-      if (response.success) {
-        const { translatedTexts } = response.data;
-        for (let j = 0; j < batchNodes.length; j++) {
-          const translated = translatedTexts[j];
-
-          // Skip if translation is identical to original (same language)
-          if (translated && translated.trim().toLowerCase() === batchNodes[j].originalText.trim().toLowerCase()) {
-            // Remove the loader, restore original
-            showError(batchLoaders[j], ''); // silently restore
-            batchNodes[j].element.removeAttribute('data-immersive-translated');
-          } else {
-            replaceLoading(batchLoaders[j], translated, targetLang);
+    const observer = new IntersectionObserver((entries) => {
+      let hasNew = false;
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          const index = Number((entry.target as HTMLElement).dataset.itIndex);
+          if (pendingIndices.has(index)) {
+            pendingIndices.delete(index);
+            priorityQueue.push(index);
+            hasNew = true;
           }
-          translatedCount++;
-        }
-        logger.info(`Progress: ${translatedCount}/${totalCount} nodes translated`);
-      } else {
-        logger.error('Translation failed:', response.error);
-        for (const loader of batchLoaders) {
-          showError(loader, response.error);
+          observer.unobserve(entry.target);
         }
       }
-    } catch (err) {
-      logger.error('Translation request error:', err);
-      for (const loader of batchLoaders) {
-        showError(loader, (err as Error).message);
+      if (hasNew) {
+        processQueues();
+      }
+    }, { rootMargin: '500px' });
+
+    loaders.forEach((loader, i) => {
+      loader.dataset.itIndex = String(i);
+      observer.observe(loader);
+    });
+
+    // After a short delay, push all remaining unobserved nodes to the normal queue
+    // so everything gets translated eventually, even if off-screen.
+        setTimeout(() => {
+          for (const i of pendingIndices) {
+            normalQueue.push(i);
+            observer.unobserve(loaders[i]);
+          }
+          pendingIndices.clear();
+          processQueues();
+        }, 500);
+
+        async function processQueues() {
+          if (isProcessing || !isActive) return;
+          isProcessing = true;
+
+      try {
+        while (priorityQueue.length > 0 || normalQueue.length > 0) {
+          if (!isActive) {
+            logger.info('Translation cancelled (deactivated)');
+            break;
+          }
+
+          const batchIndices: number[] = [];
+          while (batchIndices.length < BATCH_SIZE) {
+            if (priorityQueue.length > 0) {
+              batchIndices.push(priorityQueue.shift()!);
+            } else if (normalQueue.length > 0) {
+              batchIndices.push(normalQueue.shift()!);
+            } else {
+              break;
+            }
+          }
+
+          if (batchIndices.length === 0) break;
+
+          const batchNodes = batchIndices.map(i => nodes[i]);
+          const batchLoaders = batchIndices.map(i => loaders[i]);
+          const texts = batchNodes.map((n) => n.originalText);
+
+          const SEPARATOR = '\\n---SPLIT---\\n';
+          let accumulatedStream = '';
+          const streamListener = (msg: any) => {
+            if (msg.type === 'TRANSLATION_STREAM_CHUNK') {
+              accumulatedStream += msg.payload.chunk;
+              const parts = accumulatedStream.split(SEPARATOR.trim());
+              for (let j = 0; j < parts.length && j < batchLoaders.length; j++) {
+                if (parts[j]) {
+                  replaceLoading(batchLoaders[j], parts[j], targetLang);
+                }
+              }
+            }
+          };
+          chrome.runtime.onMessage.addListener(streamListener);
+
+          try {
+            const response = await sendToBackground<TranslationResult>({
+              type: 'TRANSLATE_REQUEST',
+              payload: { texts, sourceLang, targetLang, engine },
+            }) as MessageResponse<TranslationResult>;
+
+            if (!response) {
+              logger.error('No response from background – service worker may have crashed');
+              for (const loader of batchLoaders) {
+                showError(loader, 'No response from background');
+              }
+              continue;
+            }
+
+            if (response.success) {
+              const { translatedTexts } = response.data;
+              for (let j = 0; j < batchNodes.length; j++) {
+                const translated = translatedTexts[j];
+                if (translated && translated.trim().toLowerCase() === batchNodes[j].originalText.trim().toLowerCase()) {
+                  showError(batchLoaders[j], '');
+                  batchNodes[j].element.removeAttribute('data-immersive-translated');
+                } else {
+                  replaceLoading(batchLoaders[j], translated, targetLang);
+                }
+              }
+              translatedCount += batchNodes.length;
+              updateProgress(translatedCount, totalCount);
+              logger.info(`Progress: ${translatedCount}/${totalCount} nodes translated`);
+            } else {
+              logger.error('Translation failed:', response.error);
+              for (const loader of batchLoaders) {
+                showError(loader, response.error);
+              }
+            }
+          } catch (err) {
+            logger.error('Translation request error:', err);
+            for (const loader of batchLoaders) {
+              showError(loader, (err as Error).message);
+            }
+          } finally {
+            chrome.runtime.onMessage.removeListener(streamListener);
+          }
+        }
+      } finally {
+        isProcessing = false;
+        // Resolve the promise if all elements have been queued and processed
+        if (priorityQueue.length === 0 && normalQueue.length === 0 && pendingIndices.size === 0) {
+          observer.disconnect();
+          resolve();
+        }
       }
     }
-  }
-
-  logger.info(`Translation complete: ${translatedCount}/${totalCount} nodes`);
+  });
 }
 
-async function translateSelection(text: string): Promise<void> {
-  if (!currentSettings) {
-    currentSettings = await getSettings();
-  }
 
-  // Show floating tooltip near the right-click position
-  const tooltip = createSelectionTooltip(lastContextMenuPos.x, lastContextMenuPos.y);
-  tooltip.textContent = '\u2026'; // loading ellipsis
-
-  try {
-    const response = await sendToBackground<TranslationResult>({
-      type: 'TRANSLATE_REQUEST',
-      payload: {
-        texts: [text],
-        sourceLang: currentSettings.sourceLang,
-        targetLang: currentSettings.targetLang,
-      },
-    }) as MessageResponse<TranslationResult>;
-
-    if (response.success) {
-      tooltip.textContent = response.data.translatedTexts[0];
-      tooltip.classList.add('immersive-selection-ready');
-    } else {
-      tooltip.textContent = response.error ?? 'Translation failed';
-      tooltip.classList.add('immersive-selection-error');
-    }
-  } catch (err) {
-    tooltip.textContent = (err as Error).message;
-    tooltip.classList.add('immersive-selection-error');
-  }
-}
-
-function createSelectionTooltip(x: number, y: number): HTMLElement {
-  // Remove any existing tooltip
-  document.querySelector('.immersive-selection-tooltip')?.remove();
-
-  const tooltip = document.createElement('div');
-  tooltip.className = 'immersive-selection-tooltip';
-
-  // Position near the right-click, clamped to viewport
-  const maxX = window.innerWidth - 320;
-  const maxY = window.innerHeight - 100;
-  tooltip.style.left = `${Math.min(x, maxX)}px`;
-  tooltip.style.top = `${Math.min(y + 10, maxY)}px`;
-
-  document.body.appendChild(tooltip);
-
-  // Close on click outside
-  const closeHandler = (e: MouseEvent) => {
-    if (!tooltip.contains(e.target as Node)) {
-      tooltip.remove();
-      document.removeEventListener('mousedown', closeHandler);
-    }
-  };
-  setTimeout(() => document.addEventListener('mousedown', closeHandler), 100);
-
-  return tooltip;
-}
 
 function deactivate(): void {
   isActive = false;

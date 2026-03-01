@@ -3,13 +3,13 @@ import { ENGINES, getEngineInfo } from '@/constants/engines';
 import { TranslationEngine } from '@/types/translation';
 
 describe('ENGINES', () => {
-  it('has 10 engines defined', () => {
-    expect(ENGINES).toHaveLength(10);
+  it('has 11 engines defined', () => {
+    expect(ENGINES).toHaveLength(11);
   });
 
-  it('has 6 free engines', () => {
+  it('has 7 free engines', () => {
     const free = ENGINES.filter((e) => !e.requiresKey);
-    expect(free).toHaveLength(6);
+    expect(free).toHaveLength(7);
   });
 
   it('has 4 paid engines', () => {

@@ -4,18 +4,63 @@ import { getCached, putCached } from '@/shared/cache';
 import { getSettings } from '@/shared/storage';
 import { getEngineInfo } from '@/constants/engines';
 import { logger } from '@/shared/logger';
+import { getGlossary } from '@/shared/glossary-store';
+import { GlossaryEntry } from '@/types/glossary';
 
 const MAX_CONCURRENT_BATCHES = 3;
+
+function escapeRegExp(string: string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function applyGlossaryPreProcessing(texts: string[], glossary: GlossaryEntry[]): { processedTexts: string[], mappedTerms: string[] } {
+  if (!glossary.length) return { processedTexts: texts, mappedTerms: [] };
+  
+  const mappedTerms: string[] = [];
+  const processedTexts = texts.map(text => {
+    let newText = text;
+    glossary.forEach(entry => {
+      if (!entry.sourceTerm) return;
+      const flags = entry.caseSensitive ? 'g' : 'gi';
+      const regex = new RegExp(`\\b${escapeRegExp(entry.sourceTerm)}\\b`, flags);
+      
+      newText = newText.replace(regex, () => {
+        const index = mappedTerms.length;
+        mappedTerms.push(entry.targetTerm);
+        return `[GLS_${index}_GLS]`;
+      });
+    });
+    return newText;
+  });
+  
+  return { processedTexts, mappedTerms };
+}
+
+function applyGlossaryPostProcessing(translatedTexts: string[], mappedTerms: string[]): string[] {
+  if (!mappedTerms.length) return translatedTexts;
+  
+  return translatedTexts.map(text => {
+    return text.replace(/\[\s*GLS\s*_\s*(\d+)\s*_\s*GLS\s*\]/gi, (match, indexStr) => {
+      const index = parseInt(indexStr, 10);
+      return mappedTerms[index] || match;
+    });
+  });
+}
 
 export async function translateTexts(
   texts: string[],
   sourceLang: string,
   targetLang: string,
-  engineOverride?: TranslationEngine
+  engineOverride?: TranslationEngine,
+  onStream?: (chunk: string) => void
 ): Promise<TranslationResult> {
   const settings = await getSettings();
   const engineType = engineOverride ?? settings.engine;
-  const engineConfig: EngineConfig = settings.engineConfigs?.[engineType] ?? { engine: engineType };
+  const baseConfig = settings.engineConfigs?.[engineType] ?? { engine: engineType };
+  const engineConfig: EngineConfig = {
+    ...baseConfig,
+    formality: settings.formality ?? 'auto',
+  };
 
   // Validate API key for engines that require one
   const engineInfo = getEngineInfo(engineType);
@@ -58,32 +103,92 @@ export async function translateTexts(
   const batchSize = engine.getMaxBatchSize();
   const uncachedTexts = uncachedIndices.map((i) => texts[i]);
 
+  // Pre-process uncached texts with glossary rules
+  const glossary = await getGlossary();
+  const { processedTexts: uncachedProcessedTexts, mappedTerms } = applyGlossaryPreProcessing(uncachedTexts, glossary);
+
   // Create batches
   const batches: string[][] = [];
-  for (let i = 0; i < uncachedTexts.length; i += batchSize) {
-    batches.push(uncachedTexts.slice(i, i + batchSize));
+  for (let i = 0; i < uncachedProcessedTexts.length; i += batchSize) {
+    batches.push(uncachedProcessedTexts.slice(i, i + batchSize));
+  }
+
+  const FALLBACK_CHAIN = [
+    TranslationEngine.GOOGLE_FREE,
+    TranslationEngine.BING_FREE,
+    TranslationEngine.LINGVA,
+  ];
+
+  async function tryTranslateBatchWithFallback(batch: string[]): Promise<{ texts: string[]; engineUsed: TranslationEngine }> {
+    try {
+      return { 
+        texts: await engine.translate(batch, sourceLang, targetLang, onStream),
+        engineUsed: engineType 
+      };
+    } catch (err) {
+      logger.warn(`Primary engine ${engineType} failed: ${(err as Error).message}. Trying fallbacks...`);
+      
+      const fallbacks = FALLBACK_CHAIN.filter(e => e !== engineType);
+      let lastError = err;
+      
+      for (const fallbackType of fallbacks) {
+        try {
+          logger.info(`Attempting fallback with ${fallbackType}`);
+          const fallbackEngineConfig: EngineConfig = { engine: fallbackType };
+          const fallbackEngine = createEngine(fallbackType, fallbackEngineConfig);
+          return { 
+            texts: await fallbackEngine.translate(batch, sourceLang, targetLang),
+            engineUsed: fallbackType 
+          };
+        } catch (fallbackErr) {
+          logger.warn(`Fallback engine ${fallbackType} failed: ${(fallbackErr as Error).message}`);
+          lastError = fallbackErr;
+        }
+      }
+      
+      throw lastError;
+    }
   }
 
   // Process batches with concurrency limit
-  const batchResults: string[][] = [];
+  const batchResults: Array<{ texts: string[]; engineUsed: TranslationEngine }> = [];
   for (let i = 0; i < batches.length; i += MAX_CONCURRENT_BATCHES) {
     const concurrentBatches = batches.slice(i, i + MAX_CONCURRENT_BATCHES);
     const results = await Promise.all(
-      concurrentBatches.map((batch) =>
-        engine.translate(batch, sourceLang, targetLang)
-      )
+      concurrentBatches.map(batch => tryTranslateBatchWithFallback(batch))
     );
     batchResults.push(...results);
   }
 
   // Flatten batch results and map back to original indices
-  const flatResults = batchResults.flat();
+  let finalEngine = engineType;
+  const rawTranslatedTexts: string[] = [];
+
+  for (let i = 0, batchIdx = 0, itemIdx = 0; i < uncachedIndices.length; i++) {
+    const { texts: batchTexts, engineUsed } = batchResults[batchIdx];
+    rawTranslatedTexts.push(batchTexts[itemIdx]);
+    
+    if (engineUsed !== engineType) finalEngine = engineUsed;
+
+    itemIdx++;
+    if (itemIdx >= batchTexts.length) {
+      batchIdx++;
+      itemIdx = 0;
+    }
+  }
+
+  // Post-process to inject glossary target terms back in
+  const postProcessedTexts = applyGlossaryPostProcessing(rawTranslatedTexts, mappedTerms);
+
+  // Map back to final array and cache
   for (let i = 0; i < uncachedIndices.length; i++) {
     const originalIndex = uncachedIndices[i];
-    translatedTexts[originalIndex] = flatResults[i];
+    const finalTranslatedText = postProcessedTexts[i];
+    
+    translatedTexts[originalIndex] = finalTranslatedText;
 
-    // Cache the result
-    putCached(texts[originalIndex], flatResults[i], sourceLang, targetLang, engineType).catch(
+    // Cache the original uncached context with the final translated result
+    putCached(texts[originalIndex], finalTranslatedText, sourceLang, targetLang, finalEngine).catch(
       (err) => logger.error('Cache write failed:', err)
     );
   }
@@ -91,7 +196,7 @@ export async function translateTexts(
   return {
     originalTexts: texts,
     translatedTexts,
-    engine: engineType,
+    engine: finalEngine,
     cached: false,
     timestamp: Date.now(),
   };
@@ -102,4 +207,62 @@ export async function validateEngine(engineType: TranslationEngine): Promise<{ v
   const engineConfig: EngineConfig = settings.engineConfigs?.[engineType] ?? { engine: engineType };
   const engine = createEngine(engineType, engineConfig);
   return engine.validateConfig();
+}
+
+export async function explainGrammar(text: string, sourceLang: string, targetLang: string): Promise<string> {
+  const settings = await getSettings();
+  
+  // Try to find an LLM engine to use (OpenAI or Claude)
+  const llmEngineType = [
+    settings.engine,
+    settings.compareEngine,
+    TranslationEngine.OPENAI,
+    TranslationEngine.CLAUDE
+  ].find(e => e === TranslationEngine.OPENAI || e === TranslationEngine.CLAUDE);
+  
+  if (!llmEngineType) {
+    throw new Error('Please configure OpenAI or Claude in settings to use the Grammar Explain feature.');
+  }
+  
+  const engineConfig: EngineConfig = settings.engineConfigs?.[llmEngineType] ?? { engine: llmEngineType };
+  
+  if (!engineConfig.apiKey) {
+    throw new Error(`API key required for ${getEngineInfo(llmEngineType).name}. Please configure it in settings.`);
+  }
+  
+  const engine = createEngine(llmEngineType, engineConfig);
+  return engine.explain(text, sourceLang, targetLang);
+}
+
+export async function translateImage(
+  imageBase64: string,
+  sourceLang: string,
+  targetLang: string,
+  engineOverride?: TranslationEngine
+): Promise<string> {
+  const settings = await getSettings();
+  const engineType = engineOverride ?? settings.engine;
+
+  // Image translation requires vision capabilities (OpenAI/Claude)
+  const visionEngineType = [
+    engineType,
+    TranslationEngine.OPENAI,
+    TranslationEngine.CLAUDE
+  ].find(e => e === TranslationEngine.OPENAI || e === TranslationEngine.CLAUDE);
+
+  if (!visionEngineType) {
+    throw new Error('Please configure OpenAI or Claude in settings to use Image Translation.');
+  }
+
+  const engineConfig: EngineConfig = settings.engineConfigs?.[visionEngineType] ?? { engine: visionEngineType };
+  if (!engineConfig.apiKey) {
+    throw new Error(`API key required for ${getEngineInfo(visionEngineType).name}. Please configure it in settings.`);
+  }
+
+  const engine = createEngine(visionEngineType, engineConfig);
+  if (!engine.translateImage) {
+    throw new Error(`Engine ${visionEngineType} does not support image translation yet.`);
+  }
+  
+  return engine.translateImage(imageBase64, sourceLang, targetLang);
 }

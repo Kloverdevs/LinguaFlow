@@ -9,6 +9,7 @@ export enum TranslationEngine {
   OPENAI = 'openai',
   CLAUDE = 'claude',
   MICROSOFT = 'microsoft',
+  CHROME_BUILTIN = 'chrome_builtin',
 }
 
 export interface TranslationRequest {
@@ -32,4 +33,6 @@ export interface EngineConfig {
   apiKey?: string;
   model?: string;
   customEndpoint?: string;
+  customPrompt?: string;
+  formality?: 'auto' | 'formal' | 'informal';
 }

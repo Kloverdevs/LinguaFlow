@@ -91,6 +91,75 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ─── Bilingual mode: enter animation ─────────────────────────── */
+.it-bilingual-enter {
+  animation: it-bilingual-fade-in 0.3s ease-out;
+}
+@keyframes it-bilingual-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Replace mode: enter animation ───────────────────────────── */
+.it-replace-enter {
+  animation: it-replace-fade-in 0.3s ease-out;
+}
+@keyframes it-replace-fade-in {
+  from { opacity: 0.3; }
+  to   { opacity: 1; }
+}
+
+/* ─── TTS Button ─────────────────────────────────────────────── */
+.it-tts-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  margin-left: 6px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  vertical-align: middle;
+  color: var(--it-border-color, #6366f1);
+}
+.it-bilingual-block:hover .it-tts-btn,
+.it-tts-btn:focus-visible {
+  opacity: 0.6;
+}
+.it-tts-btn:hover {
+  opacity: 1 !important;
+}
+
+.it-feedback-active.it-feedback-up {
+  color: #10b981 !important;
+  opacity: 1 !important;
+}
+.it-feedback-active.it-feedback-down {
+  color: #ef4444 !important;
+  opacity: 1 !important;
+}
+
+/* ─── Show-original tooltip (replace mode hover) ─────────────── */
+.it-original-tooltip {
+  position: absolute;
+  z-index: 2147483647;
+  max-width: 360px;
+  padding: 6px 10px;
+  background: #1e293b;
+  color: #e2e8f0;
+  font-size: 12px;
+  line-height: 1.5;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transform: translateY(-100%);
+  pointer-events: none;
+  animation: it-tooltip-in 0.15s ease;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
 /* ─── Bilingual mode: error state ─────────────────────────────── */
 .it-error {
   color: #ef4444;
@@ -493,4 +562,11 @@
 }
 .it-onboarding-btn.secondary:hover {
   background: #e5e7eb;
+}
+
+/* ─── Accessibility: Dyslexia Font ────────────────────────────── */
+.it-dyslexia-font {
+  font-family: 'OpenDyslexic', 'Comic Sans MS', sans-serif !important;
+  letter-spacing: 0.05em !important;
+  word-spacing: 0.1em !important;
 }

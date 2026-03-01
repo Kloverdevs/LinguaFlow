@@ -5,11 +5,16 @@ import { TARGET_LANGUAGES } from '@/constants/languages';
 import { TranslationEngine } from '@/types/translation';
 import type { DisplayMode } from '@/types/settings';
 import { CacheManager } from './components/CacheManager';
+import { VocabManager } from './components/VocabManager';
+import { GlossaryManager } from './components/GlossaryManager';
+import { SiteRulesManager } from './components/SiteRulesManager';
+import { SettingsBackup } from './components/SettingsBackup';
 
 export function App() {
   const { settings, updateSettings } = useSettings();
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
+  const [customPrompts, setCustomPrompts] = useState<Record<string, string>>({});
 
   if (!settings) return <div className="settings-loading">Loading...</div>;
 
@@ -27,6 +32,23 @@ export function App() {
           ...settings.engineConfigs?.[engine],
           engine,
           apiKey: key,
+        },
+      },
+    });
+  };
+
+  const getCustomPrompt = (engine: TranslationEngine) =>
+    customPrompts[engine] ?? settings.engineConfigs?.[engine]?.customPrompt ?? '';
+
+  const saveCustomPrompt = (engine: TranslationEngine, prompt: string) => {
+    setCustomPrompts((prev) => ({ ...prev, [engine]: prompt }));
+    updateSettings({
+      engineConfigs: {
+        ...settings.engineConfigs,
+        [engine]: {
+          ...settings.engineConfigs?.[engine],
+          engine,
+          customPrompt: prompt,
         },
       },
     });
@@ -81,6 +103,25 @@ export function App() {
 
         <div className="setting-row">
           <div className="setting-info">
+            <span className="setting-name">Compare Engine</span>
+            <span className="setting-desc">Secondary engine for comparison mode</span>
+          </div>
+          <select
+            className="setting-select"
+            value={settings.compareEngine || ''}
+            onChange={(e) => updateSettings({ compareEngine: e.target.value ? e.target.value as TranslationEngine : undefined })}
+          >
+            <option value="">None (Disabled)</option>
+            {ENGINES.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.name} {e.requiresKey ? '' : '(Free)'}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="setting-row">
+          <div className="setting-info">
             <span className="setting-name">Show Bilingual</span>
             <span className="setting-desc">Show translation below original text</span>
           </div>
@@ -98,6 +139,28 @@ export function App() {
           <button
             className={`settings-toggle ${settings.hoverMode ? 'active' : ''}`}
             onClick={() => updateSettings({ hoverMode: !settings.hoverMode })}
+          />
+        </div>
+
+        <div className="setting-row">
+          <div className="setting-info">
+            <span className="setting-name">Sync Preferences</span>
+            <span className="setting-desc">Sync settings (excluding API keys) across signed-in browsers</span>
+          </div>
+          <button
+            className={`settings-toggle ${settings.enableSync ? 'active' : ''}`}
+            onClick={() => updateSettings({ enableSync: !settings.enableSync })}
+          />
+        </div>
+
+        <div className="setting-row">
+          <div className="setting-info">
+            <span className="setting-name">Dyslexia-friendly Font</span>
+            <span className="setting-desc">Use a highly readable font for translation blocks</span>
+          </div>
+          <button
+            className={`settings-toggle ${settings.dyslexiaFont ? 'active' : ''}`}
+            onClick={() => updateSettings({ dyslexiaFont: !settings.dyslexiaFont })}
           />
         </div>
       </div>
@@ -127,6 +190,20 @@ export function App() {
                 {showKeys[engine.id] ? 'Hide' : 'Show'}
               </button>
             </div>
+            
+            {(engine.id === TranslationEngine.OPENAI || engine.id === TranslationEngine.CLAUDE) && (
+              <div className="api-key-input-wrap" style={{ display: 'block', marginTop: '10px' }}>
+                <span className="setting-desc" style={{ display: 'block', marginBottom: '4px' }}>Custom System Prompt (Optional)</span>
+                <textarea
+                  className="api-key-input"
+                  style={{ width: '100%', minHeight: '60px', padding: '8px', resize: 'vertical' }}
+                  value={getCustomPrompt(engine.id as TranslationEngine)}
+                  onChange={(e) => setCustomPrompts((prev) => ({ ...prev, [engine.id]: e.target.value }))}
+                  onBlur={(e) => saveCustomPrompt(engine.id as TranslationEngine, e.target.value)}
+                  placeholder="e.g. Translate this as a technical manual..."
+                />
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -205,10 +282,31 @@ export function App() {
         </div>
       </div>
 
-      {/* ─── CACHE ─── */}
+      {/* ─── SITE RULES ─── */}
       <div className="settings-section">
-        <span className="section-label">DATA</span>
+        <span className="section-label">PER-SITE RULES</span>
+        <SiteRulesManager />
+      </div>
+
+      {/* ─── VOCABULARY ─── */}
+      <div className="settings-section">
+        <span className="section-label">VOCABULARY</span>
+        <VocabManager />
+      </div>
+
+      {/* ─── GLOSSARY ─── */}
+      <div className="settings-section">
+        <span className="section-label">CUSTOM GLOSSARY</span>
+        <GlossaryManager />
+      </div>
+
+      {/* ─── DATA & BACKUP ─── */}
+      <div className="settings-section">
+        <span className="section-label">DATA & BACKUP</span>
         <CacheManager />
+        <div className="mt-6 pt-4 border-t border-gray-200">
+          <SettingsBackup />
+        </div>
       </div>
 
       {/* ─── Footer ─── */}

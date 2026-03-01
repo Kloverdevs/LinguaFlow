@@ -31,6 +31,12 @@ export function setupContextMenus(): void {
     contexts: ['selection'],
   });
 
+  chrome.contextMenus.create({
+    id: 'translate-image',
+    title: 'Translate Image',
+    contexts: ['image'],
+  });
+
   chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     if (!tab?.id) return;
 
@@ -43,6 +49,11 @@ export function setupContextMenus(): void {
         await sendToContent(tab.id, {
           type: 'TRANSLATE_SELECTION',
           payload: { text: info.selectionText },
+        });
+      } else if (info.menuItemId === 'translate-image' && info.srcUrl) {
+        await sendToContent(tab.id, {
+          type: 'TRANSLATE_IMAGE',
+          payload: { srcUrl: info.srcUrl },
         });
       }
     } catch (err) {

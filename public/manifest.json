@@ -64,6 +64,20 @@
         "mac": "Alt+A"
       },
       "description": "Toggle translation on current page"
+    },
+    "toggle-hover-mode": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+H",
+        "mac": "MacCtrl+Shift+H"
+      },
+      "description": "Toggle hover translation mode"
+    },
+    "toggle-selection-mode": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "MacCtrl+Shift+S"
+      },
+      "description": "Translate selected text"
     }
   },
 

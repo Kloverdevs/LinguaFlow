@@ -1,0 +1,34 @@
+/* ================================================================
+   LinguaFlow – Video Subtitles Styles
+   ================================================================ */
+
+.caption-visual-line {
+  /* Ensure YouTube lines behave as blocks so our div stacks nicely below */
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
+
+.it-yt-translation {
+  background: rgba(8, 8, 8, 0.75);
+  color: rgb(255, 255, 255);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: "YouTube Noto", Roboto, "Arial Unicode Ms", Arial, Helvetica, Verdana, "PT Sans Caption", sans-serif;
+  text-shadow: 0 0 2px rgba(0,0,0,0.5);
+  font-weight: 500;
+  font-size: 0.9em;
+  margin-top: 4px;
+  text-align: center;
+  max-width: 95%;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  backdrop-filter: blur(2px);
+  animation: it-replace-fade-in 0.2s ease-out;
+}
+
+.it-yt-translation.it-loading {
+  color: #a3a3a3;
+  font-style: italic;
+  font-size: 0.8em;
+}

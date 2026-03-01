@@ -1,0 +1,199 @@
+/**
+ * LinguaFlow Reader Mode Styles
+ */
+
+ .it-reader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #fdfdfc;
+    z-index: 2147483647; /* Max z-index to sit on top of everything */
+    overflow-y: auto;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #1a1a1a;
+    transition: opacity 0.3s ease;
+    opacity: 0;
+  }
+  
+  .it-reader-overlay.it-show {
+    opacity: 1;
+  }
+  
+  /* Top Navigation Bar */
+  .it-reader-nav {
+    position: sticky;
+    top: 0;
+    background: rgba(253, 253, 252, 0.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid #eaeaea;
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    z-index: 10;
+  }
+  
+  .it-reader-branding {
+    font-weight: 700;
+    font-size: 16px;
+    color: #4f46e5; /* LinguaFlow Indigo */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .it-reader-actions {
+    display: flex;
+    gap: 12px;
+  }
+  
+  .it-reader-btn {
+    appearance: none;
+    border: 1px solid #e0e0e0;
+    background: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #4b5563;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .it-reader-btn:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+  }
+  
+  .it-reader-close {
+    background: #fee2e2;
+    color: #ef4444;
+    border-color: #fca5a5;
+  }
+  .it-reader-close:hover {
+    background: #fecaca;
+  }
+  
+  /* Article Content */
+  .it-reader-container {
+    max-width: 720px;
+    margin: 40px auto 80px;
+    padding: 0 24px;
+  }
+  
+  .it-reader-content h1.it-reader-title {
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 12px;
+    color: #111827;
+  }
+  
+  .it-reader-byline {
+    font-size: 15px;
+    color: #6b7280;
+    margin-bottom: 40px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  .it-reader-content {
+    font-size: 20px;
+    line-height: 1.6;
+    color: #374151;
+  }
+  
+  .it-reader-content p {
+    margin-bottom: 24px;
+  }
+  
+  .it-reader-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 24px 0;
+  }
+  
+  .it-reader-content figure {
+    margin: 24px 0;
+  }
+  
+  .it-reader-content figcaption {
+    font-size: 14px;
+    color: #6b7280;
+    text-align: center;
+    margin-top: 8px;
+  }
+  
+  .it-reader-content h2,
+  .it-reader-content h3 {
+    margin-top: 40px;
+    margin-bottom: 16px;
+    color: #111827;
+    font-weight: 700;
+  }
+  
+  .it-reader-content h2 { font-size: 28px; }
+  .it-reader-content h3 { font-size: 22px; }
+  
+  .it-reader-content a {
+    color: #4f46e5;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+  
+  .it-reader-content blockquote {
+    border-left: 4px solid #e5e7eb;
+    margin: 0 0 24px 0;
+    padding-left: 20px;
+    font-style: italic;
+    color: #4b5563;
+  }
+  
+  /* Dark Mode Toggle */
+  .it-reader-overlay.it-dark {
+    background: #121212;
+    color: #e5e5e5;
+  }
+  
+  .it-reader-overlay.it-dark .it-reader-nav {
+    background: rgba(18, 18, 18, 0.95);
+    border-bottom-color: #2a2a2a;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  
+  .it-reader-overlay.it-dark .it-reader-btn {
+    background: #1e1e1e;
+    border-color: #333;
+    color: #d1d5db;
+  }
+  
+  .it-reader-overlay.it-dark .it-reader-btn:hover {
+    background: #2a2a2a;
+  }
+  
+  .it-reader-overlay.it-dark .it-reader-content h1.it-reader-title,
+  .it-reader-overlay.it-dark .it-reader-content h2,
+  .it-reader-overlay.it-dark .it-reader-content h3 {
+    color: #f3f4f6;
+  }
+  
+  .it-reader-overlay.it-dark .it-reader-content,
+  .it-reader-overlay.it-dark .it-reader-content p,
+  .it-reader-overlay.it-dark .it-reader-content blockquote {
+    color: #d1d5db;
+  }
+  
+  .it-reader-overlay.it-dark .it-reader-content blockquote {
+    border-left-color: #374151;
+  }
+  
+  .it-reader-overlay.it-dark .it-reader-close {
+    background: #7f1d1d;
+    color: #fca5a5;
+    border-color: #991b1b;
+  }

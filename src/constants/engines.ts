@@ -20,6 +20,7 @@ export const ENGINES: EngineInfo[] = [
   { id: TranslationEngine.DEEPL, name: 'DeepL', requiresKey: true, color: '#0F2B46', description: 'High-quality neural translation' },
   { id: TranslationEngine.OPENAI, name: 'OpenAI', requiresKey: true, defaultModel: 'gpt-4o-mini', color: '#10A37F', description: 'GPT-powered translation' },
   { id: TranslationEngine.CLAUDE, name: 'Claude', requiresKey: true, defaultModel: 'claude-sonnet-4-5-20250514', color: '#D97757', description: 'Anthropic AI translation' },
+  { id: TranslationEngine.CHROME_BUILTIN, name: 'Offline (Chrome Built-in)', requiresKey: false, color: '#3367D6', description: 'On-device private translation' },
 ];
 
 export function getEngineInfo(engine: TranslationEngine): EngineInfo {

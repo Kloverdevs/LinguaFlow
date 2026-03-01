@@ -5,6 +5,7 @@ import { DeepLEngine } from './deepl-engine';
 import { OpenAIEngine } from './openai-engine';
 import { ClaudeEngine } from './claude-engine';
 import { MicrosoftTranslateEngine } from './microsoft-engine';
+import { ChromeBuiltinEngine } from './chrome-builtin-engine';
 import { BingFreeEngine } from './bing-free-engine';
 import { YandexEngine } from './yandex-engine';
 import { LingvaEngine } from './lingva-engine';
@@ -36,6 +37,8 @@ export function createEngine(
       return new ClaudeEngine(config);
     case TranslationEngine.MICROSOFT:
       return new MicrosoftTranslateEngine(config);
+    case TranslationEngine.CHROME_BUILTIN:
+      return new ChromeBuiltinEngine(config);
     default:
       throw new Error(`Unknown translation engine: ${type}`);
   }

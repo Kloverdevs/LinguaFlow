@@ -43,6 +43,10 @@ export class DeepLEngine extends BaseTranslationEngine {
       body.source_lang = this.toDeepLLang(sourceLang);
     }
 
+    if (this.config.formality && this.config.formality !== 'auto') {
+      body.formality = this.config.formality === 'formal' ? 'more' : 'less';
+    }
+
     const response = await fetch(this.getEndpoint(), {
       method: 'POST',
       headers: {

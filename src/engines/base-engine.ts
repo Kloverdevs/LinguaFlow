@@ -10,7 +10,8 @@ export abstract class BaseTranslationEngine {
   abstract translate(
     texts: string[],
     sourceLang: string,
-    targetLang: string
+    targetLang: string,
+    onStream?: (chunk: string) => void
   ): Promise<string[]>;
 
   abstract validateConfig(): Promise<{ valid: boolean; error?: string }>;
@@ -20,4 +21,10 @@ export abstract class BaseTranslationEngine {
   async detectLanguage(_text: string): Promise<string | null> {
     return null;
   }
+
+  async explain(_text: string, _sourceLang: string, _targetLang: string): Promise<string> {
+    throw new Error('Grammar explanation is not supported by this engine. Please select an AI engine like OpenAI or Claude.');
+  }
+
+  async translateImage?(imageBase64: string, sourceLang: string, targetLang: string): Promise<string>;
 }

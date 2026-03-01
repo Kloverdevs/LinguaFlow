@@ -6,8 +6,20 @@ export async function getSettings(): Promise<UserSettings> {
   return result.settings ?? DEFAULT_SETTINGS;
 }
 
+export async function syncSettings(settings: UserSettings): Promise<void> {
+  // Strip engineConfigs to avoid syncing API keys in plaintext
+  const { engineConfigs, ...syncableSettings } = settings;
+  await chrome.storage.sync.set({ syncedSettings: syncableSettings });
+}
+
 export async function saveSettings(settings: UserSettings): Promise<void> {
   await chrome.storage.local.set({ settings });
+  
+  if (settings.enableSync) {
+    await syncSettings(settings).catch(() => {
+      // Ignore sync errors (e.g., quota exceeded)
+    });
+  }
 }
 
 export async function updateSettings(partial: Partial<UserSettings>): Promise<UserSettings> {

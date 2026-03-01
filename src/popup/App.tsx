@@ -4,7 +4,7 @@ import { useTranslationState } from './hooks/useTranslationState';
 import { LANGUAGES, TARGET_LANGUAGES } from '@/constants/languages';
 import { ENGINES } from '@/constants/engines';
 import { TranslationEngine } from '@/types/translation';
-import type { DisplayMode, ThemeMode, UILocale } from '@/types/settings';
+import type { DisplayMode, Formality, ThemeMode, UILocale } from '@/types/settings';
 import { CacheManager } from '../options/components/CacheManager';
 import { sendToActiveTab } from '@/shared/message-bus';
 import { getStrings, UI_LOCALE_OPTIONS } from '@/shared/i18n';
@@ -549,6 +549,21 @@ export function App() {
                 className={`toggle ${settings.hoverMode ? 'on' : ''}`}
                 onClick={() => updateSettings({ hoverMode: !settings.hoverMode })}
               />
+            </div>
+
+            <div className="setting-row">
+              <div className="setting-info">
+                <span className="setting-name">{t.formality}</span>
+              </div>
+              <select
+                className="setting-select"
+                value={settings.formality ?? 'auto'}
+                onChange={(e) => updateSettings({ formality: e.target.value as Formality })}
+              >
+                <option value="auto">{t.formalityAuto}</option>
+                <option value="formal">{t.formalityFormal}</option>
+                <option value="informal">{t.formalityInformal}</option>
+              </select>
             </div>
           </div>
 

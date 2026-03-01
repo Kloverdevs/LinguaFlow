@@ -1,4 +1,4 @@
-import { walkDOM } from './dom-walker';
+import { walkDOMAsync } from './dom-walker';
 import { TranslatableNode } from '@/types/dom';
 
 let observer: MutationObserver | null = null;
@@ -36,9 +36,10 @@ export function startObserving(
     if (hasNewContent && onNewNodesCallback) {
       // Debounce: cancel previous timer and wait for DOM to settle
       if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
-        const newNodes = walkDOM(document.body).filter(
-          (n) => !n.element.hasAttribute('data-immersive-translated')
+      debounceTimer = setTimeout(async () => {
+        const walkedNodes = await walkDOMAsync(document.body);
+        const newNodes = walkedNodes.filter(
+          (n: TranslatableNode) => !n.element.hasAttribute('data-immersive-translated')
         );
         if (newNodes.length > 0 && onNewNodesCallback) {
           onNewNodesCallback(newNodes);

@@ -1,0 +1,83 @@
+.it-dictionary-card {
+  position: fixed;
+  z-index: 2147483647; /* Max z-index */
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  font-family: system-ui, -apple-system, sans-serif;
+  padding: 16px;
+  min-width: 250px;
+  max-width: 350px;
+  color: #333;
+  animation: it-popup-fadein 0.2s ease-out;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.it-dictionary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+.it-dictionary-source {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1a73e8;
+}
+
+.it-dictionary-translation {
+  font-size: 1.1rem;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.it-dictionary-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.it-dict-btn {
+  background: #f1f3f4;
+  border: none;
+  border-radius: 16px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: #444;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+
+.it-dict-btn:hover {
+  background: #e8eaed;
+  color: #1a73e8;
+}
+
+.it-dict-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+.it-dict-btn.saved {
+  background: #e6f4ea;
+  color: #137333;
+}
+
+@keyframes it-popup-fadein {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
