@@ -1,11 +1,17 @@
-import { getSettings } from '@/shared/storage';
+import { getSettings, onSettingsChanged } from '@/shared/storage';
 import { sendToBackground } from '@/shared/message-bus';
 import { TranslationResult } from '@/types/translation';
 import { saveVocabEntry } from '@/shared/vocab-store';
 import { getActiveSiteRule } from '@/shared/site-rulesHelper';
+import { TARGET_LANGUAGES } from '@/constants/languages';
 
 let popupElement: HTMLElement | null = null;
 let currentSettings: any = null;
+
+// Keep settings in sync so popup always uses the latest target language
+onSettingsChanged((newSettings) => {
+  currentSettings = newSettings;
+});
 
 export async function showSelectionPopup(text: string, x: number, y: number) {
   closeSelectionPopup();
@@ -27,12 +33,19 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
   popupElement.style.left = `${Math.min(x, maxX)}px`;
   popupElement.style.top = `${Math.min(y + 15, maxY)}px`;
 
+  const langOptions = TARGET_LANGUAGES.map(l => 
+    `<option value="${l.code}" style="background: #1e293b; color: #f8fafc;" ${l.code === targetLang ? 'selected' : ''}>${l.name}</option>`
+  ).join('');
+
   popupElement.innerHTML = `
     <div class="it-selection-header">
       <div class="it-lang-pills">
         <span class="it-lang-pill">${currentSettings.sourceLang.toUpperCase()}</span>
         <span>→</span>
-        <span class="it-lang-pill">${targetLang.toUpperCase()}</span>
+        <select class="it-lang-pill it-lang-select" style="background: rgba(255, 255, 255, 0.1); border: none; color: #ddd; padding: 2px 6px; border-radius: 4px; font-weight: 500; font-family: inherit; cursor: pointer; outline: none; -webkit-appearance: none; appearance: none; padding-right: 20px;">
+          ${langOptions}
+        </select>
+        <span style="position: absolute; right: 10px; pointer-events: none; font-size: 10px; color: #aaa;">▼</span>
       </div>
     </div>
     <div class="it-selection-content">
@@ -95,32 +108,52 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
 
   let currentTranslation = '';
 
-  try {
-    const response = await sendToBackground<TranslationResult>({
-      type: 'TRANSLATE_REQUEST',
-      payload: { 
-        texts: [text], 
-        sourceLang: currentSettings.sourceLang, 
-        targetLang: targetLang,
-        engine: engine
-      },
-    });
+  let currentTargetConfig = targetLang;
+  
+  const performTranslation = async (activeTargetLang: string) => {
+    contentDiv.innerHTML = '<span style="opacity:0.7">Translating...</span>';
+    actionsDiv.style.display = 'none';
+    explainDiv.style.display = 'none';
+    compareDiv.style.display = 'none';
+    explainBtn.disabled = false;
+    explainBtn.style.opacity = '1';
+    
+    try {
+      const response = await sendToBackground<TranslationResult>({
+        type: 'TRANSLATE_REQUEST',
+        payload: { 
+          texts: [text], 
+          sourceLang: currentSettings.sourceLang, 
+          targetLang: activeTargetLang,
+          engine: engine
+        },
+      });
 
-    if (response && response.success && response.data.translatedTexts.length > 0) {
-      currentTranslation = response.data.translatedTexts[0];
-      contentDiv.textContent = currentTranslation;
-      actionsDiv.style.display = 'flex';
-      
-      if (currentSettings.compareEngine && currentSettings.compareEngine !== engine) {
-        compareBtn.style.display = 'flex';
+      if (response && response.success && response.data.translatedTexts.length > 0) {
+        currentTranslation = response.data.translatedTexts[0];
+        contentDiv.textContent = currentTranslation;
+        actionsDiv.style.display = 'flex';
+        
+        if (currentSettings.compareEngine && currentSettings.compareEngine !== engine) {
+          compareBtn.style.display = 'flex';
+        }
+      } else {
+        const errMsg = !response ? 'Translation failed' : (!response.success ? response.error : 'Translation failed');
+        contentDiv.innerHTML = `<span class="it-selection-error">${errMsg}</span>`;
       }
-    } else {
-      const errMsg = !response ? 'Translation failed' : (!response.success ? response.error : 'Translation failed');
-      contentDiv.innerHTML = `<span class="it-selection-error">${errMsg}</span>`;
+    } catch (err) {
+      contentDiv.innerHTML = `<span class="it-selection-error">${(err as Error).message}</span>`;
     }
-  } catch (err) {
-    contentDiv.innerHTML = `<span class="it-selection-error">${(err as Error).message}</span>`;
-  }
+  };
+
+  await performTranslation(targetLang);
+
+  // Bind language switcher
+  const targetLangSelect = popupElement.querySelector('.it-lang-select') as HTMLSelectElement;
+  targetLangSelect.addEventListener('change', () => {
+    currentTargetConfig = targetLangSelect.value;
+    performTranslation(currentTargetConfig);
+  });
 
   compareBtn.addEventListener('click', async () => {
     if (!currentSettings.compareEngine) return;
@@ -136,7 +169,7 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
         payload: { 
           texts: [text], 
           sourceLang: currentSettings.sourceLang, 
-          targetLang: targetLang,
+          targetLang: currentTargetConfig,
           engine: currentSettings.compareEngine
         },
       });
@@ -166,7 +199,7 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
         payload: { 
           text, 
           sourceLang: currentSettings.sourceLang, 
-          targetLang: targetLang
+          targetLang: currentTargetConfig
         },
       });
 
@@ -226,7 +259,7 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
         text,
         translation: currentTranslation,
         sourceLang: currentSettings.sourceLang,
-        targetLang: targetLang,
+        targetLang: currentTargetConfig,
         sourceUrl: window.location.href,
         context: text
       });

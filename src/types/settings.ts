@@ -29,6 +29,7 @@ export interface UserSettings {
   displayMode: DisplayMode;
   translationStyle: TranslationStyle;
   onboardingCompleted: boolean;
+  tourCompleted: boolean;
   theme: ThemeMode;
   showFreeEngines: boolean;
   showPaidEngines: boolean;

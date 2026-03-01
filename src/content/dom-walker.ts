@@ -136,9 +136,14 @@ function hasBlockTranslatableChild(el: HTMLElement): boolean {
  *  3. Container tags (DIV, SECTION, etc.) → translate if they have inline text content
  *     not already covered by block-level children
  */
-export async function walkDOMAsync(root?: Element): Promise<TranslatableNode[]> {
+export async function walkDOMAsync(
+  root?: Element, 
+  onNodesFound?: (nodes: TranslatableNode[]) => void
+): Promise<TranslatableNode[]> {
   const contentRoot = root ?? document.body;
   const nodes: TranslatableNode[] = [];
+  const chunk: TranslatableNode[] = [];
+  const CHUNK_SIZE = 50;
   const seen = new WeakSet<HTMLElement>();
 
   const walker = document.createTreeWalker(
@@ -178,7 +183,7 @@ export async function walkDOMAsync(root?: Element): Promise<TranslatableNode[]> 
           seen.add(el);
           // Mark all inline children as seen too (they're covered by this block)
           markInlineChildrenSeen(el, seen);
-          nodes.push({
+          chunk.push({
             element: el,
             originalText: text,
             originalHTML: el.innerHTML,
@@ -192,7 +197,7 @@ export async function walkDOMAsync(root?: Element): Promise<TranslatableNode[]> 
           const text = el.textContent?.trim() || '';
           if (isSubstantiveText(text)) {
             seen.add(el);
-            nodes.push({
+            chunk.push({
               element: el,
               originalText: text,
               originalHTML: el.innerHTML,
@@ -208,7 +213,7 @@ export async function walkDOMAsync(root?: Element): Promise<TranslatableNode[]> 
           if (isSubstantiveText(text)) {
             seen.add(el);
             markInlineChildrenSeen(el, seen);
-            nodes.push({
+            chunk.push({
               element: el,
               originalText: text,
               originalHTML: el.innerHTML,
@@ -220,7 +225,20 @@ export async function walkDOMAsync(root?: Element): Promise<TranslatableNode[]> 
       }
     }
 
+    // Flush the chunk via callback if it reaches our threshold
+    if (chunk.length >= CHUNK_SIZE) {
+      if (onNodesFound) onNodesFound([...chunk]);
+      nodes.push(...chunk);
+      chunk.length = 0;
+    }
+
     current = walker.nextNode();
+  }
+
+  // Flush any remaining nodes
+  if (chunk.length > 0) {
+    if (onNodesFound) onNodesFound([...chunk]);
+    nodes.push(...chunk);
   }
 
   return nodes;

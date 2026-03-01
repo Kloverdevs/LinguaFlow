@@ -8,10 +8,14 @@ logger.info('Service worker starting');
 setupMessageHandler();
 setupKeyboardShortcuts();
 
-// Set up context menus when the extension is installed
-chrome.runtime.onInstalled.addListener(() => {
+// Set up context menus and onboarding when the extension is installed
+chrome.runtime.onInstalled.addListener((details) => {
   logger.info('Extension installed, setting up context menus');
   setupContextMenus();
+  
+  if (details.reason === 'install') {
+    chrome.tabs.create({ url: 'welcome/index.html' });
+  }
 });
 
 // Broadcast settings changes to ALL tabs instantly

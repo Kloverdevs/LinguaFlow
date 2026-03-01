@@ -5,7 +5,7 @@ import './selection-popup.css';
 import './reading-mode.css';
 import { initVideoSubtitles, updateVideoSubtitleLanguage } from './video-subtitles';
 import { initLiveCaptions, updateLiveCaptionsLanguage } from './live-captions';
-import { initPdfHandler, isPdfPage } from './pdf-handler';
+import { initPdfHandler, isPdfPage, startPdfTranslation } from './pdf-handler';
 import { toggleReadingMode } from './reading-mode';
 import { setupDictionaryListener } from './dictionary-popup';
 import { showSelectionPopup } from './selection-popup';
@@ -22,8 +22,8 @@ import { enableHover, disableHover, updateHoverLang } from './hover-handler';
 import { startObserving, stopObserving } from './mutation-observer';
 import { createFloatingButton, updateFabState, updateFabLabels, updateFabSize, setFabVisible } from './floating-button';
 import type { FabLabels } from './floating-button';
-import { showOnboardingIfNeeded } from './onboarding';
 import { showImageTranslationModal } from './image-translator';
+import { launchProductTour } from './product-tour';
 import { sendToBackground } from '@/shared/message-bus';
 import { onSettingsChanged, getSettings, updateSettings } from '@/shared/storage';
 import { getActiveSiteRule } from '@/shared/site-rulesHelper';
@@ -33,7 +33,14 @@ import { MessageToContent, MessageResponse } from '@/types/messages';
 import { UserSettings, DisplayMode } from '@/types/settings';
 import { TranslatableNode } from '@/types/dom';
 import { logger } from '@/shared/logger';
-import { initProgressIndicator, showProgress, updateProgress, hideProgress } from './translation-progress';
+import {
+  initProgressIndicator,
+  showProgress,
+  hideProgress,
+  incrementProgress,
+  setTotalNodes,
+  showErrorProgress,
+} from './translation-progress';
 
 let isActive = false;
 let hoverEnabled = false;
@@ -65,9 +72,6 @@ document.addEventListener('contextmenu', (e) => {
   setDisplayMode(currentSettings.displayMode);
   setDyslexiaFont(!!currentSettings.dyslexiaFont);
   logger.info('Content script loaded');
-
-  // Show onboarding if first time
-  showOnboardingIfNeeded();
 
   const fabSize = currentSettings.fabSize ?? 48;
 
@@ -130,11 +134,11 @@ document.addEventListener('contextmenu', (e) => {
     const prevFabSize = currentSettings?.fabSize;
     const prevFabEnabled = currentSettings?.fabEnabled;
     currentSettings = newSettings;
-    setDisplayMode(newSettings.displayMode);
+    setDisplayMode(isPdfPage() ? 'replace' : newSettings.displayMode);
     setDyslexiaFont(!!newSettings.dyslexiaFont);
 
     // Enable/disable hover based on hoverMode setting (works independently of page translation)
-    if (newSettings.hoverMode && !prevHoverMode) {
+    if (newSettings.hoverMode && !prevHoverMode && !isPdfPage()) {
       hoverEnabled = true;
       enableHover(newSettings.targetLang);
     } else if (!newSettings.hoverMode && prevHoverMode) {
@@ -165,7 +169,7 @@ document.addEventListener('contextmenu', (e) => {
   });
 
   // Enable hover on load if hoverMode is already enabled
-  if (currentSettings.hoverMode) {
+  if (currentSettings.hoverMode && !isPdfPage()) {
     hoverEnabled = true;
     enableHover(currentSettings.targetLang);
   }
@@ -193,6 +197,10 @@ chrome.runtime.onMessage.addListener(
     sendResponse: (response: MessageResponse) => void
   ): boolean => {
     switch (message.type) {
+      case '__PING__':
+        sendResponse({ success: true, data: null });
+        return false;
+
       case 'TRANSLATE_PAGE':
         translatePage().then(() => sendResponse({ success: true, data: null }));
         return true;
@@ -307,14 +315,63 @@ chrome.runtime.onMessage.addListener(
         return false;
       }
 
+      case 'EXECUTE_CHROME_BUILTIN': {
+        handleChromeBuiltin(message.payload)
+          .then((res) => sendResponse({ success: true, data: res }))
+          .catch((err) => sendResponse({ success: false, error: err.message }));
+        return true;
+      }
+
       default:
         return false;
     }
   }
 );
 
+async function handleChromeBuiltin(payload: { texts: string[]; sourceLang: string; targetLang: string }): Promise<string[]> {
+  const globalObj = window as any;
+  const api = globalObj.translation || globalObj.ai?.translator;
+  if (!api) {
+    throw new Error('Chrome Built-in Translator API is not available in your browser instance. Please enable the #translation-api flag in chrome://flags.');
+  }
+
+  const sl = payload.sourceLang === 'auto' ? 'en' : payload.sourceLang.split('-')[0];
+  const tl = payload.targetLang.split('-')[0];
+
+  let availability;
+  try {
+    availability = await api.canTranslate({ sourceLanguage: sl, targetLanguage: tl });
+  } catch (e) {
+    throw new Error(`Failed to check language support: ${(e as Error).message}`);
+  }
+
+  if (availability === 'no') {
+    throw new Error(`Chrome cannot natively translate from ${sl} to ${tl}. Language pair not supported yet.`);
+  }
+
+  let translator = null;
+  try {
+    translator = await api.createTranslator({ sourceLanguage: sl, targetLanguage: tl });
+    const results: string[] = [];
+    for (const text of payload.texts) {
+      if (!text.trim()) {
+        results.push(text);
+        continue;
+      }
+      results.push(await translator.translate(text));
+    }
+    return results;
+  } finally {
+    if (translator) translator.destroy();
+  }
+}
+
 async function translatePage(): Promise<void> {
-  if (isPdfPage()) return; // PDF handles translation natively in its own side panel
+  if (isPdfPage()) {
+    logger.info('Starting manual PDF translation...');
+    await startPdfTranslation();
+    // Proceed to translate the newly injected PDF text layers
+  }
 
   // Prevent concurrent translate calls (rapid clicks)
   if (isTranslating) {
@@ -335,18 +392,27 @@ async function translatePage(): Promise<void> {
   applyTranslationStyles(currentSettings);
 
   try {
-    const nodes = await walkDOMAsync();
-    logger.info(`Found ${nodes.length} translatable nodes`);
-
     const activeRule = getActiveSiteRule(currentSettings);
     const targetLang = activeRule?.targetLang || currentSettings.targetLang;
     const engine = activeRule?.engine;
 
-    if (nodes.length > 0) {
-      showProgress();
-      await translateNodes(nodes, currentSettings.sourceLang, targetLang, engine);
-      hideProgress();
-    }
+    let totalNodesFound = 0;
+    showProgress();
+
+    // Stream the nodes in chunks of 50 to avoid the massive initial indexing delay
+    await walkDOMAsync(undefined, async (nodesChunk) => {
+      totalNodesFound += nodesChunk.length;
+      setTotalNodes(totalNodesFound);
+      
+      logger.info(`Translating chunk of ${nodesChunk.length} nodes...`);
+      // Fire and forget chunk translation so we don't block the walker
+      translateNodes(nodesChunk, currentSettings!.sourceLang, targetLang, engine).catch(err => {
+        logger.error('Error translating chunk:', err);
+      });
+    });
+
+    logger.info(`Finished scanning. Total ${totalNodesFound} translatable nodes found`);
+    if (totalNodesFound === 0) hideProgress();
 
     if (currentSettings.hoverMode || hoverEnabled) {
       enableHover(currentSettings.targetLang);
@@ -358,6 +424,8 @@ async function translatePage(): Promise<void> {
         translateNodes(newNodes, currentSettings.sourceLang, ar?.targetLang || currentSettings.targetLang, ar?.engine);
       }
     });
+  } catch (err) {
+    logger.error('Error during translatePage execution', err);
   } finally {
     isTranslating = false;
   }
@@ -378,13 +446,13 @@ async function translateNodes(
   const loaders = nodes.map((node) => showLoading(node.element));
 
   let translatedCount = 0;
-  const totalCount = nodes.length;
 
   return new Promise<void>((resolve) => {
     const pendingIndices = new Set(nodes.map((_, i) => i));
     const priorityQueue: number[] = [];
     const normalQueue: number[] = [];
     let isProcessing = false;
+    let observerDisconnected = false;
 
     const observer = new IntersectionObserver((entries) => {
       let hasNew = false;
@@ -402,23 +470,29 @@ async function translateNodes(
       if (hasNew) {
         processQueues();
       }
-    }, { rootMargin: '500px' });
+    }, { 
+      root: document.getElementById('lf-pdf-root') || null,
+      rootMargin: '500px' 
+    });
 
     loaders.forEach((loader, i) => {
       loader.dataset.itIndex = String(i);
       observer.observe(loader);
     });
 
-    // After a short delay, push all remaining unobserved nodes to the normal queue
+    const isPdfViewer = document.getElementById('lf-pdf-root') !== null;
+
+    // After a short delay (or instantly for PDFs), push all remaining unobserved nodes to the normal queue
     // so everything gets translated eventually, even if off-screen.
-        setTimeout(() => {
-          for (const i of pendingIndices) {
-            normalQueue.push(i);
-            observer.unobserve(loaders[i]);
-          }
-          pendingIndices.clear();
-          processQueues();
-        }, 500);
+    setTimeout(() => {
+      if (observerDisconnected) return;
+      for (const i of pendingIndices) {
+        normalQueue.push(i);
+        observer.unobserve(loaders[i]);
+      }
+      pendingIndices.clear();
+      processQueues();
+    }, isPdfViewer ? 50 : 500);
 
         async function processQueues() {
           if (isProcessing || !isActive) return;
@@ -489,16 +563,18 @@ async function translateNodes(
                 }
               }
               translatedCount += batchNodes.length;
-              updateProgress(translatedCount, totalCount);
-              logger.info(`Progress: ${translatedCount}/${totalCount} nodes translated`);
+              incrementProgress(batchNodes.length);
+              logger.info(`Progress: ${translatedCount} nodes translated in this chunk stream`);
             } else {
               logger.error('Translation failed:', response.error);
+              showErrorProgress(response.error);
               for (const loader of batchLoaders) {
                 showError(loader, response.error);
               }
             }
           } catch (err) {
             logger.error('Translation request error:', err);
+            showErrorProgress((err as Error).message);
             for (const loader of batchLoaders) {
               showError(loader, (err as Error).message);
             }
@@ -510,7 +586,12 @@ async function translateNodes(
         isProcessing = false;
         // Resolve the promise if all elements have been queued and processed
         if (priorityQueue.length === 0 && normalQueue.length === 0 && pendingIndices.size === 0) {
-          observer.disconnect();
+          if (!observerDisconnected) {
+            observer.disconnect();
+            observerDisconnected = true;
+          }
+          // Only hide the global progress if we aren't accumulating more translations
+          // (Actually, hiding progress is tricky with chunks, so we'll rely on global tracking in translation-progress.ts)
           resolve();
         }
       }

@@ -2,6 +2,7 @@ import { sendToBackground } from '@/shared/message-bus';
 import { TranslationResult } from '@/types/translation';
 import { MessageResponse } from '@/types/messages';
 import { isSubstantiveText } from './content-detector';
+import { isPdfPage } from './pdf-handler';
 
 const DEBOUNCE_MS = 300;
 
@@ -143,11 +144,13 @@ function isLinguaFlowElement(el: HTMLElement): boolean {
   return false;
 }
 
-function handleMouseEnter(e: Event): void {
-  if (!hoverEnabled) return;
+function handleMouseEnter(e: MouseEvent): void {
+  if (!hoverEnabled || isPdfPage()) return;
 
   const el = e.target as HTMLElement;
   if (isLinguaFlowElement(el)) return;
+  // Ignore PDF.js native text layer elements to prevent hover boxes from breaking absolute positioning
+  if (el.closest('.textLayer') || el.classList.contains('textLayer')) return;
   if (el.hasAttribute('data-immersive-translated')) return;
   if (el.hasAttribute('data-immersive-block')) return;
 

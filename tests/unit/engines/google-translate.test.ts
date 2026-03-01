@@ -10,8 +10,8 @@ describe('GoogleTranslateEngine', () => {
     vi.restoreAllMocks();
   });
 
-  it('has max batch size of 1', () => {
-    expect(engine.getMaxBatchSize()).toBe(1);
+  it('has max batch size of 20', () => {
+    expect(engine.getMaxBatchSize()).toBe(20);
   });
 
   it('translates a single text', async () => {
@@ -25,27 +25,23 @@ describe('GoogleTranslateEngine', () => {
     expect(fetch).toHaveBeenCalledOnce();
   });
 
-  it('translates multiple texts sequentially', async () => {
+  it('translates multiple texts in one batch', async () => {
     vi.stubGlobal('fetch', vi.fn()
       .mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve([[['Hola', 'Hello']]]),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve([[['Mundo', 'World']]]),
+        json: () => Promise.resolve([[['Hola\n\nMundo', 'Hello\n\nWorld']]]),
       })
     );
 
     const result = await engine.translate(['Hello', 'World'], 'en', 'es');
     expect(result).toEqual(['Hola', 'Mundo']);
-    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 
   it('joins multi-segment responses', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve([[['Part one. ', 'Part one.'], ['Part two.', 'Part two.']]]),
+      json: () => Promise.resolve([[['Part one. Part two.', 'Part one. Part two.']]]),
     }));
 
     const result = await engine.translate(['Part one. Part two.'], 'en', 'es');

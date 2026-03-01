@@ -15,6 +15,7 @@ export type MessageToBackground =
 
 // Messages sent from background or popup to content script
 export type MessageToContent =
+  | { type: '__PING__' }
   | { type: 'TOGGLE_TRANSLATION' }
   | { type: 'TOGGLE_HOVER_MODE' }
   | { type: 'TRANSLATE_CURRENT_SELECTION' }
@@ -23,7 +24,8 @@ export type MessageToContent =
   | { type: 'REMOVE_TRANSLATIONS' }
   | { type: 'SETTINGS_CHANGED'; payload: UserSettings }
   | { type: 'TRANSLATION_STREAM_CHUNK'; payload: { chunk: string } }
-  | { type: 'TRANSLATE_IMAGE'; payload: { srcUrl: string } };
+  | { type: 'TRANSLATE_IMAGE'; payload: { srcUrl: string } }
+  | { type: 'EXECUTE_CHROME_BUILTIN'; payload: { texts: string[]; sourceLang: string; targetLang: string } };
 
 export type MessageResponse<T = unknown> =
   | { success: true; data: T }

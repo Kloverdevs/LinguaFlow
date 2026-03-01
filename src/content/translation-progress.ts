@@ -67,15 +67,36 @@ export async function initProgressIndicator() {
       border-radius: 3px;
       transition: width 0.3s ease;
     }
+    .it-progress-error {
+      background-color: #fef2f2 !important;
+      color: #b91c1c !important;
+      border: 1px solid #f87171;
+    }
+    .it-progress-error .it-progress-bar {
+      background: #ef4444 !important;
+    }
   `;
   document.head.appendChild(style);
   document.body.appendChild(progressContainer);
 }
 
-export function showProgress() {
+let globalTotal = 0;
+let globalCurrent = 0;
+
+export function showProgress(initialTotal = 0) {
   if (progressContainer) {
+    progressContainer.classList.remove('it-progress-error');
     progressContainer.classList.add('visible');
-    updateProgress(0, 1); // Reset
+    globalTotal = initialTotal;
+    globalCurrent = 0;
+    
+    // Reset text to default based on current language
+    getSettings().then(settings => {
+      const t = getStrings(settings.uiLocale ?? 'auto');
+      if (progressText) progressText.textContent = t.translating || 'Translating...';
+    });
+
+    updateProgressUI();
   }
 }
 
@@ -84,16 +105,47 @@ export function hideProgress() {
     progressContainer.classList.remove('visible');
     setTimeout(() => {
       if (progressBar) progressBar.style.width = '0%';
+      progressContainer?.classList.remove('it-progress-error');
     }, 300);
   }
 }
 
-export function updateProgress(current: number, total: number) {
+export function setTotalNodes(total: number) {
+  globalTotal = total;
+  updateProgressUI();
+}
+
+export function incrementProgress(amount: number) {
+  globalCurrent += amount;
+  updateProgressUI();
+}
+
+function updateProgressUI() {
   if (progressContainer && progressBar && progressText) {
-    const percentage = Math.max(0, Math.min(100, (current / total) * 100));
+    const percentage = globalTotal > 0 ? Math.max(0, Math.min(100, (globalCurrent / globalTotal) * 100)) : 0;
     progressBar.style.width = `${percentage}%`;
+
+    // Auto-hide when 100% complete
+    if (globalTotal > 0 && globalCurrent >= globalTotal) {
+      setTimeout(() => {
+        // Double check it wasn't reset by a new translation batch before hiding
+        if (globalTotal > 0 && globalCurrent >= globalTotal) {
+          hideProgress();
+        }
+      }, 800);
+    }
+  }
+}
+
+export function showErrorProgress(message: string) {
+  if (progressContainer && progressText) {
+    progressContainer.classList.add('visible', 'it-progress-error');
+    progressText.textContent = message;
+    if (progressBar) progressBar.style.width = '100%';
     
-    // Optional: update text if we want "Translating 10 / 50..."
-    // progressText.textContent = `Translating ${current} / ${total}`;
+    // Auto-hide error after 5 seconds
+    setTimeout(() => {
+      hideProgress();
+    }, 5000);
   }
 }

@@ -18,6 +18,7 @@ export default defineConfig({
       input: {
         popup: resolve(__dirname, 'src/popup/index.html'),
         options: resolve(__dirname, 'src/options/index.html'),
+        welcome: resolve(__dirname, 'src/welcome/index.html'),
       },
       output: {
         entryFileNames: '[name]/[name].js',

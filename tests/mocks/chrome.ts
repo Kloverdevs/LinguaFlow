@@ -1,9 +1,33 @@
+import { vi } from 'vitest';
+
 // Minimal chrome API mock for unit tests
 const storageMock: Record<string, unknown> = {};
 
 const chrome = {
   storage: {
     local: {
+      get: vi.fn((keys: string | string[], cb?: (result: Record<string, unknown>) => void) => {
+        const result: Record<string, unknown> = {};
+        const keyArr = typeof keys === 'string' ? [keys] : keys;
+        for (const k of keyArr) {
+          if (k in storageMock) result[k] = storageMock[k];
+        }
+        if (cb) cb(result);
+        return Promise.resolve(result);
+      }),
+      set: vi.fn((items: Record<string, unknown>, cb?: () => void) => {
+        Object.assign(storageMock, items);
+        if (cb) cb();
+        return Promise.resolve();
+      }),
+      remove: vi.fn((keys: string | string[], cb?: () => void) => {
+        const keyArr = typeof keys === 'string' ? [keys] : keys;
+        for (const k of keyArr) delete storageMock[k];
+        if (cb) cb();
+        return Promise.resolve();
+      }),
+    },
+    sync: {
       get: vi.fn((keys: string | string[], cb?: (result: Record<string, unknown>) => void) => {
         const result: Record<string, unknown> = {};
         const keyArr = typeof keys === 'string' ? [keys] : keys;

@@ -1,4 +1,5 @@
 import { DisplayMode } from '@/types/settings';
+import { isPdfPage } from './pdf-handler';
 
 let currentMode: DisplayMode = 'replace';
 let ttsEnabled = true;
@@ -13,6 +14,14 @@ export function setDyslexiaFont(enabled: boolean): void {
 }
 
 export function getDisplayMode(): DisplayMode {
+  return currentMode;
+}
+
+function getEffectiveMode(el: HTMLElement): DisplayMode {
+  if (isPdfPage()) return 'replace';
+  // Native PDF.js viewers (like Firefox or PDFObject) use absolute positioned .textLayer spans. 
+  // Bilingual blocks (injected div adjacent siblings) break their coordinates, so force replace mode.
+  if (el.closest('.textLayer') || el.classList.contains('textLayer')) return 'replace';
   return currentMode;
 }
 
@@ -146,7 +155,8 @@ export function showLoading(originalEl: HTMLElement): HTMLElement {
   }
   originalEl.setAttribute('data-immersive-translated', 'true');
 
-  if (currentMode === 'replace') {
+  const effectiveMode = getEffectiveMode(originalEl);
+  if (effectiveMode === 'replace') {
     originalEl.classList.add('immersive-translate-loading');
     if (dyslexiaFontEnabled) originalEl.classList.add('it-dyslexia-font');
     return originalEl;
@@ -172,7 +182,8 @@ export function replaceLoading(
   translatedText: string,
   targetLang: string
 ): void {
-  if (currentMode === 'replace') {
+  const effectiveMode = getEffectiveMode(loader);
+  if (effectiveMode === 'replace') {
     loader.classList.remove('immersive-translate-loading');
     loader.classList.add('it-replace-enter');
     loader.setAttribute('lang', targetLang);
@@ -193,8 +204,10 @@ export function replaceLoading(
       loader.textContent = translatedText;
     }
 
-    // Add show-original tooltip on hover
-    addHoverOriginalTooltip(loader);
+    // Add show-original tooltip on hover (skip for PDFs to prevent overlapping blocks)
+    if (!isPdfPage()) {
+      addHoverOriginalTooltip(loader);
+    }
   } else {
     // Bilingual: the loader is the block we inserted
     loader.classList.remove('it-loading');
@@ -214,7 +227,8 @@ export function replaceLoading(
 // ─── Error ──────────────────────────────────────────────────────────
 
 export function showError(loader: HTMLElement, error: string): void {
-  if (currentMode === 'replace') {
+  const effectiveMode = getEffectiveMode(loader);
+  if (effectiveMode === 'replace') {
     loader.classList.remove('immersive-translate-loading');
     const originalHTML = loader.getAttribute('data-immersive-original-html');
     if (originalHTML !== null) {

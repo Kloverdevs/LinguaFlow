@@ -77,17 +77,16 @@ Prioritized roadmap based on the competitive audit. Organized into 5 phases with
 - **Effort**: Large
 - **Priority**: Very High — #1 most requested feature across market
 
-### 2.2 PDF translation with bilingual display
+### 2.2 PDF translation with side-by-side split view
 - **New files**: `src/content/pdf-handler.ts`, `src/popup/components/PdfTranslate.tsx`
 - **Work**:
   - Detect PDF viewer pages (Chrome's built-in PDF viewer, pdf.js)
-  - Extract text layers from PDF
-  - Option 1: Render translated PDF in a side panel (bilingual view)
-  - Option 2: Overlay translations on existing PDF text
-  - Preserve layout, images, tables
-- **Dependencies**: May need pdf.js library for text extraction
+  - Extract text layers from PDF using pdf.js
+  - Shrink the native `embed[type="application/pdf"]` element to 50% width and pin it to the left edge so the user can see the original PDF.
+  - Render the translated text layers in a custom side panel (50% width, pinned right) to create a side-by-side reading experience.
+- **Dependencies**: pdf.js library for rendering and text extraction
 - **Effort**: Large
-- **Priority**: High — every serious competitor has this
+- **Priority**: High — requested by user to match top apps
 
 ### 2.3 Word-level dictionary popup on double-click
 - **New files**: `src/content/dictionary-popup.ts`, `src/content/dictionary-popup.css`

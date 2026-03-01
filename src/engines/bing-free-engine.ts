@@ -56,16 +56,23 @@ export class BingFreeEngine extends BaseTranslationEngine {
           throw new Error(`Bing Translate HTTP ${retryResponse.status}`);
         }
         const data = await retryResponse.json();
-        return data.map((item: { translations: { text: string }[] }) =>
-          item.translations[0].text
+        // The Bing API returns an array of translation results, one for each input text.
+        // We'll assume a successful response means all items were processed.
+        return data.map((item: { translations: { text: string }[] }, index: number) =>
+          item?.translations?.[0]?.text ?? texts[index]
         );
       }
       throw new Error(`Bing Translate HTTP ${response.status}`);
     }
 
     const data = await response.json();
-    return data.map((item: { translations: { text: string }[] }) =>
-      item.translations[0].text
+    // The Bing API returns an array of translation results, one for each input text.
+    // If an individual translation fails, the API typically returns a successful response (200 OK)
+    // but with an error property for that specific item, or an empty translation.
+    // We'll assume a successful response means all items were processed,
+    // and if a translation is missing or malformed for an item, we'll return the original text.
+    return data.map((item: { translations: { text: string }[] }, index: number) =>
+      item?.translations?.[0]?.text ?? texts[index]
     );
   }
 

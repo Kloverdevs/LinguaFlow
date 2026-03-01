@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { walkDOM } from '@/content/dom-walker';
+import { walkDOMAsync, TranslatableNode } from '../../../src/content/dom-walker';
 
 // Mock getComputedStyle for jsdom
 function mockVisible(el: Element): void {
@@ -25,24 +25,24 @@ describe('walkDOM', () => {
     document.body.innerHTML = '';
   });
 
-  it('finds paragraph elements with text', () => {
+ it('finds paragraph elements with text', async () => {
     document.body.innerHTML = '<p>Hello world, this is a test paragraph</p>';
     mockVisibleAll(document.body);
 
-    const nodes = walkDOM();
+    const nodes = await walkDOMAsync();
     expect(nodes.length).toBe(1);
     expect(nodes[0].originalText).toBe('Hello world, this is a test paragraph');
   });
 
-  it('finds heading elements', () => {
+  it('finds heading elements', async () => {
     document.body.innerHTML = '<h1>Main Heading Title</h1><h2>Sub Heading Title</h2>';
     mockVisibleAll(document.body);
 
-    const nodes = walkDOM();
+    const nodes = await walkDOMAsync();
     expect(nodes.length).toBe(2);
   });
 
-  it('skips script and style elements', () => {
+  it('skips script and style elements', async () => {
     document.body.innerHTML = `
       <p>Visible paragraph text here</p>
       <script>console.log("hidden")</script>
@@ -50,46 +50,46 @@ describe('walkDOM', () => {
     `;
     mockVisibleAll(document.body);
 
-    const nodes = walkDOM();
+    const nodes = await walkDOMAsync();
     expect(nodes.length).toBe(1);
     expect(nodes[0].originalText).toBe('Visible paragraph text here');
   });
 
-  it('skips already translated elements', () => {
+  it('skips already translated elements', async () => {
     document.body.innerHTML = '<p data-immersive-translated="true">Already done</p>';
     mockVisibleAll(document.body);
 
-    const nodes = walkDOM();
+    const nodes = await walkDOMAsync();
     expect(nodes.length).toBe(0);
   });
 
-  it('skips short text content', () => {
+  it('skips short text content', async () => {
     document.body.innerHTML = '<p>A</p>';
     mockVisibleAll(document.body);
 
-    const nodes = walkDOM();
+    const nodes = await walkDOMAsync();
     expect(nodes.length).toBe(0);
   });
 
-  it('includes word count in results', () => {
+  it('includes word count in results', async () => {
     document.body.innerHTML = '<p>This is a test sentence with multiple words</p>';
     mockVisibleAll(document.body);
 
-    const nodes = walkDOM();
+    const nodes = await walkDOMAsync();
     expect(nodes.length).toBe(1);
     expect(nodes[0].wordCount).toBe(8);
   });
 
-  it('includes xpath in results', () => {
+  it('includes xpath in results', async () => {
     document.body.innerHTML = '<div><p>Test paragraph content here</p></div>';
     mockVisibleAll(document.body);
 
-    const nodes = walkDOM();
+    const nodes = await walkDOMAsync();
     expect(nodes.length).toBe(1);
     expect(nodes[0].xpath).toContain('p[1]');
   });
 
-  it('accepts a custom root element', () => {
+  it('accepts a custom root element', async () => {
     document.body.innerHTML = `
       <div id="outside"><p>Outside paragraph text here</p></div>
       <div id="inside"><p>Inside paragraph text here</p></div>
@@ -97,12 +97,12 @@ describe('walkDOM', () => {
     mockVisibleAll(document.body);
 
     const inside = document.getElementById('inside')!;
-    const nodes = walkDOM(inside);
+    const nodes = await walkDOMAsync(inside);
     expect(nodes.length).toBe(1);
     expect(nodes[0].originalText).toBe('Inside paragraph text here');
   });
 
-  it('skips input and button elements', () => {
+  it('skips input and button elements', async () => {
     document.body.innerHTML = `
       <p>Real paragraph content here</p>
       <input value="input text" />
@@ -110,63 +110,63 @@ describe('walkDOM', () => {
     `;
     mockVisibleAll(document.body);
 
-    const nodes = walkDOM();
+    const nodes = await walkDOMAsync();
     expect(nodes.length).toBe(1);
   });
 
   // New tests for audit fixes:
 
-  it('translates block-level P element with inline children (span, em, strong)', () => {
+  it('translates block-level P element with inline children (span, em, strong)', async () => {
     document.body.innerHTML = '<p>Hello <span>beautiful</span> <em>world</em></p>';
     mockVisibleAll(document.body);
 
-    const nodes = walkDOM();
+    const nodes = await walkDOMAsync();
     // The P should be translated as a whole, inline children should NOT be separate
     expect(nodes.length).toBe(1);
     expect(nodes[0].element.tagName).toBe('P');
     expect(nodes[0].originalText).toBe('Hello beautiful world');
   });
 
-  it('does not double-translate inline children of a block parent', () => {
+  it('does not double-translate inline children of a block parent', async () => {
     document.body.innerHTML = '<p>Click <a href="/page">here</a> for more info</p>';
     mockVisibleAll(document.body);
 
-    const nodes = walkDOM();
+    const nodes = await walkDOMAsync();
     // P covers the text — A should not get its own entry
     expect(nodes.length).toBe(1);
     expect(nodes[0].element.tagName).toBe('P');
   });
 
-  it('translates standalone inline elements with no block parent', () => {
+  it('translates standalone inline elements with no block parent', async () => {
     document.body.innerHTML = '<div><span>Standalone inline text here</span></div>';
     mockVisibleAll(document.body);
 
-    const nodes = walkDOM();
+    const nodes = await walkDOMAsync();
     // The span has no block translatable ancestor — it gets picked up
     // (DIV is a container, not a block translatable)
     expect(nodes.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('translates container DIV with only inline text content', () => {
+  it('translates container DIV with only inline text content', async () => {
     document.body.innerHTML = '<div>This is plain text inside a div element</div>';
     mockVisibleAll(document.body);
 
-    const nodes = walkDOM();
+    const nodes = await walkDOMAsync();
     expect(nodes.length).toBe(1);
     expect(nodes[0].element.tagName).toBe('DIV');
   });
 
-  it('skips container DIV that has block children covering text', () => {
+  it('skips container DIV that has block children covering text', async () => {
     document.body.innerHTML = '<div><p>Paragraph handles this text completely</p></div>';
     mockVisibleAll(document.body);
 
-    const nodes = walkDOM();
+    const nodes = await walkDOMAsync();
     // The P is picked up, the DIV is not (it has a block translatable child)
     expect(nodes.length).toBe(1);
     expect(nodes[0].element.tagName).toBe('P');
   });
 
-  it('finds SUMMARY and LEGEND elements', () => {
+  it('finds SUMMARY and LEGEND elements', async () => {
     document.body.innerHTML = `
       <details>
         <summary>Click to expand this details element</summary>
@@ -178,35 +178,35 @@ describe('walkDOM', () => {
     `;
     mockVisibleAll(document.body);
 
-    const nodes = walkDOM();
-    const tags = nodes.map(n => n.element.tagName);
+    const nodes = await walkDOMAsync();
+    const tags = nodes.map((n: TranslatableNode) => n.element.tagName);
     expect(tags).toContain('SUMMARY');
     expect(tags).toContain('LEGEND');
   });
 
-  it('finds ADDRESS elements', () => {
+  it('finds ADDRESS elements', async () => {
     document.body.innerHTML = '<address>123 Main Street, Springfield</address>';
     mockVisibleAll(document.body);
 
-    const nodes = walkDOM();
+    const nodes = await walkDOMAsync();
     expect(nodes.length).toBe(1);
     expect(nodes[0].element.tagName).toBe('ADDRESS');
   });
 
-  it('handles container with mixed inline elements (span, strong)', () => {
+  it('handles container with mixed inline elements (span, strong)', async () => {
     document.body.innerHTML = '<div><span>Part one</span> and <strong>part two</strong></div>';
     mockVisibleAll(document.body);
 
-    const nodes = walkDOM();
+    const nodes = await walkDOMAsync();
     // The DIV has no block children — its inline text should be collected
     expect(nodes.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('handles NAV content when nav has text elements', () => {
+  it('handles NAV content when nav has text elements', async () => {
     document.body.innerHTML = '<nav><a href="/">Home Page Link Text</a></nav>';
     mockVisibleAll(document.body);
 
-    const nodes = walkDOM();
+    const nodes = await walkDOMAsync();
     // NAV is no longer excluded — the A inside should be translatable
     expect(nodes.length).toBeGreaterThanOrEqual(1);
   });

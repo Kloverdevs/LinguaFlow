@@ -35,4 +35,5 @@ export interface EngineConfig {
   customEndpoint?: string;
   customPrompt?: string;
   formality?: 'auto' | 'formal' | 'informal';
+  tabId?: number;
 }

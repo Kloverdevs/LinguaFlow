@@ -41,7 +41,7 @@ async function handleMessage(
         });
       } : undefined;
 
-      const result = await translateTexts(texts, sourceLang, targetLang, engine, onStream);
+      const result = await translateTexts(texts, sourceLang, targetLang, engine, onStream, tabId);
       return { success: true, data: result };
     }
 

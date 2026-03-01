@@ -23,6 +23,12 @@ export function App() {
   const getApiKey = (engine: TranslationEngine) =>
     apiKeys[engine] ?? settings.engineConfigs?.[engine]?.apiKey ?? '';
 
+  const needsKey = (engineId: TranslationEngine): boolean => {
+    const info = ENGINES.find((e) => e.id === engineId);
+    if (!info?.requiresKey) return false;
+    return !getApiKey(engineId);
+  };
+
   const saveApiKey = (engine: TranslationEngine, key: string) => {
     setApiKeys((prev) => ({ ...prev, [engine]: key }));
     updateSettings({
@@ -94,8 +100,8 @@ export function App() {
             onChange={(e) => updateSettings({ engine: e.target.value as TranslationEngine })}
           >
             {ENGINES.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.name} {e.requiresKey ? '' : '(Free)'}
+              <option key={e.id} value={e.id} disabled={needsKey(e.id)}>
+                {e.name} {e.requiresKey ? '' : '(Free)'}{needsKey(e.id) ? ' (Needs Key)' : ''}
               </option>
             ))}
           </select>
@@ -113,8 +119,8 @@ export function App() {
           >
             <option value="">None (Disabled)</option>
             {ENGINES.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.name} {e.requiresKey ? '' : '(Free)'}
+              <option key={e.id} value={e.id} disabled={needsKey(e.id)}>
+                {e.name} {e.requiresKey ? '' : '(Free)'}{needsKey(e.id) ? ' (Needs Key)' : ''}
               </option>
             ))}
           </select>

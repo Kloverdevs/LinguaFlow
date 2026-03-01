@@ -1,4 +1,5 @@
 import { DisplayMode } from '@/types/settings';
+import { isPdfPage } from './pdf-handler';
 
 let fab: HTMLElement | null = null;
 let fabMenu: HTMLElement | null = null;
@@ -81,6 +82,7 @@ function buildMenuHTML(labels: FabLabels): void {
       <span class="immersive-fab-menu-icon">&#10005;</span>
       <span>${labels.restoreOriginal}</span>
     </button>
+    ${!isPdfPage() ? `
     <div class="immersive-fab-menu-divider"></div>
     <button class="immersive-fab-menu-item" data-action="mode">
       <span class="immersive-fab-menu-icon">&#8644;</span>
@@ -97,6 +99,7 @@ function buildMenuHTML(labels: FabLabels): void {
       <span class="immersive-fab-menu-icon">&#128214;</span>
       <span>${labels.readerMode}</span>
     </button>
+    ` : ''}
   `;
   // Re-bind click handlers
   fabMenu.querySelectorAll('.immersive-fab-menu-item').forEach((btn) => {

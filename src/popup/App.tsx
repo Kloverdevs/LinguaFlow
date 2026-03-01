@@ -165,12 +165,16 @@ function EngineDropdown({
   showFreeTag,
   engines,
   freeLabel = 'Free',
+  disabledEngines = [],
+  missingKeyLabel = 'Key Required',
 }: {
   value: TranslationEngine;
   onChange: (engine: TranslationEngine) => void;
   showFreeTag?: boolean;
   engines: typeof ENGINES;
   freeLabel?: string;
+  disabledEngines?: TranslationEngine[];
+  missingKeyLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -209,11 +213,14 @@ function EngineDropdown({
             <button
               key={e.id}
               className={`engine-dropdown-item ${e.id === value ? 'selected' : ''}`}
+              disabled={disabledEngines.includes(e.id)}
               onClick={() => { onChange(e.id); setOpen(false); }}
+              title={disabledEngines.includes(e.id) ? missingKeyLabel : ''}
             >
               <EngineIcon engineId={e.id} size={16} />
               <span className="engine-dropdown-item-name">{e.name}</span>
               {showFreeTag && !e.requiresKey && <span className="engine-free-tag">{freeLabel}</span>}
+              {disabledEngines.includes(e.id) && <span className="engine-free-tag" style={{background: 'rgba(255, 100, 100, 0.2)', color: 'var(--it-text-muted)'}}>{missingKeyLabel}</span>}
             </button>
           ))}
         </div>
@@ -405,6 +412,8 @@ export function App() {
               showFreeTag
               engines={visibleEngines}
               freeLabel={t.free}
+              disabledEngines={visibleEngines.filter(e => needsKey(e.id)).map(e => e.id)}
+              missingKeyLabel={t.apiKeyRequired || 'Need Key'}
             />
             {missingKey && (
               <div className="warn-wrap">
@@ -524,8 +533,8 @@ export function App() {
                 onChange={(e) => updateSettings({ engine: e.target.value as TranslationEngine })}
               >
                 {visibleEngines.map((e) => (
-                  <option key={e.id} value={e.id}>
-                    {e.name}{!e.requiresKey ? ` (${t.free})` : ''}
+                  <option key={e.id} value={e.id} disabled={needsKey(e.id)}>
+                    {e.name}{!e.requiresKey ? ` (${t.free})` : ''}{needsKey(e.id) ? ` (${t.apiKeyRequired || 'Needs Key'})` : ''}
                   </option>
                 ))}
               </select>

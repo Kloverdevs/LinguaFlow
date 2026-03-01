@@ -28,81 +28,23 @@ export class ChromeBuiltinEngine extends BaseTranslationEngine {
     return 1; // Translate one by one as API doesn't support batching natively
   }
 
-  private getTranslationApi(): ChromeTranslation | undefined {
-    // Current API surface on self/window object as of Chrome early 2025
-    if (typeof self !== 'undefined') {
-      const globalObj = self as unknown as Window;
-      return globalObj.translation || globalObj.ai?.translator;
-    }
-    return undefined;
-  }
-
   async translate(texts: string[], sourceLang: string, targetLang: string): Promise<string[]> {
-    const api = this.getTranslationApi();
+    if (this.config.tabId) {
+      // Proxy the request to the content script running in the active tab since SW can't access window.ai
+      const response = await chrome.tabs.sendMessage(this.config.tabId, {
+        type: 'EXECUTE_CHROME_BUILTIN',
+        payload: { texts, sourceLang, targetLang }
+      });
+      if (response && !response.success) {
+        throw new Error(response.error);
+      }
+      return response ? response.data : texts.map(() => 'Error routing offline translation to page context.');
+    }
     
-    if (!api) {
-      throw new Error('Chrome Built-in Translator API is not available in your browser version. Enable the #translation-api flag in chrome://flags.');
-    }
-
-    // Chrome API expects 'en', 'es', etc. It does not support 'auto' directly yet in some versions, 
-    // but the spec suggests leaving sourceLanguage undefined or empty might work for auto-detect in the future.
-    // For now, we will default auto to English or allow the API to reject it.
-    const sl = sourceLang === 'auto' ? 'en' : sourceLang.split('-')[0];
-    const tl = targetLang.split('-')[0]; // Chrome API expects base language codes usually
-
-    let availability: TranslatorAvailability;
-    try {
-      availability = await api.canTranslate({
-        sourceLanguage: sl,
-        targetLanguage: tl,
-      });
-    } catch (e) {
-      throw new Error(`Failed to check language support: ${(e as Error).message}`);
-    }
-
-    if (availability === 'no') {
-      throw new Error(`Chrome cannot translate from ${sl} to ${tl}. Language pair not supported.`);
-    }
-
-    if (availability === 'after-download') {
-      logger.info(`Downloading language model for ${sl} -> ${tl}...`);
-      // Note: createTranslator will automatically trigger the download if needed
-    }
-
-    let translator: ChromeTranslator | null = null;
-    try {
-      translator = await api.createTranslator({
-        sourceLanguage: sl,
-        targetLanguage: tl,
-      });
-
-      const results: string[] = [];
-      for (const text of texts) {
-        if (!text.trim()) {
-          results.push(text);
-          continue;
-        }
-        const translated = await translator.translate(text);
-        results.push(translated);
-      }
-      return results;
-    } catch (e) {
-      throw new Error(`Chrome translation failed: ${(e as Error).message}`);
-    } finally {
-      if (translator) {
-        translator.destroy();
-      }
-    }
+    throw new Error('Chrome Built-in engine cannot run in this context without a target tab.');
   }
 
   async validateConfig(): Promise<{ valid: boolean; error?: string }> {
-    const api = this.getTranslationApi();
-    if (!api) {
-      return { 
-        valid: false, 
-        error: 'Chrome built-in translator API not found. Please ensure you are using Chrome 131+ and have the necessary experimental flags enabled (chrome://flags/#translation-api).' 
-      };
-    }
-    return { valid: true };
+    return { valid: true }; // Content script checks actual validity at runtime
   }
 }

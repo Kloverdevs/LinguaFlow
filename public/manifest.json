@@ -83,7 +83,7 @@
 
   "web_accessible_resources": [
     {
-      "resources": ["icons/*", "icons/logo.png"],
+      "resources": ["icons/*", "icons/logo.png", "pdfjs/*", "tesseract/*"],
       "matches": ["<all_urls>"]
     }
   ]

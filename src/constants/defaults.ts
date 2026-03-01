@@ -16,6 +16,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
     italic: true,
   },
   onboardingCompleted: false,
+  tourCompleted: false,
   theme: 'system',
   showFreeEngines: true,
   showPaidEngines: true,
