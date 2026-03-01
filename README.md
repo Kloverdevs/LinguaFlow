@@ -2,6 +2,15 @@
 
 **Open-source bilingual webpage translation Chrome extension.**
 
+<div align="center">
+  <img src="./screenshots/bilingual-mode.png" width="48%" alt="Bilingual Mode" />
+  <img src="./screenshots/popup-interface.png" width="48%" alt="Popup Interface" />
+  <img src="./screenshots/selection-translation.png" width="48%" alt="Selection Translation" />
+  <img src="./screenshots/image-translation.png" width="48%" alt="Image Translation" />
+  <img src="./screenshots/floating-action-button.png" width="48%" alt="Floating Action Button" />
+  <img src="./screenshots/pdf-translated.png" width="48%" alt="PDF Translation" />
+</div>
+
 LinguaFlow translates webpages in-place, showing translations alongside the original text. It supports 10 translation engines (6 free, 4 paid), 29 languages, hover-to-translate mode, a fully localized UI in 11 languages, and a draggable floating action button for quick access.
 
 Built with **React 19**, **TypeScript 5.7**, **Vite 6**, and **Chrome Manifest V3**.
