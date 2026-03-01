@@ -159,8 +159,12 @@ export async function showImageTranslationModal(srcUrl: string, initialSourceLan
           }) as MessageResponse<any>;
           
           if (textResp.success && textResp.data.translatedTexts.length > 0) {
-            const formatted = textResp.data.translatedTexts[0].replace(/\n/g, '<br>');
-            resultContainer.innerHTML = `<div class="it-image-result">${formatted}</div>`;
+            resultContainer.innerHTML = '';
+            const resDiv = document.createElement('div');
+            resDiv.className = 'it-image-result';
+            resDiv.style.whiteSpace = 'pre-wrap';
+            resDiv.textContent = textResp.data.translatedTexts[0];
+            resultContainer.appendChild(resDiv);
           } else {
             throw new Error(!textResp.success ? textResp.error : 'No translation returned');
           }
@@ -221,13 +225,25 @@ export async function showImageTranslationModal(srcUrl: string, initialSourceLan
         }
 
         if (response.success) {
-          const formattedText = response.data?.replace(/\n/g, '<br>') || 'No text found';
-          resultContainer.innerHTML = `<div class="it-image-result">${formattedText}</div>`;
+          resultContainer.innerHTML = '';
+          const resDiv = document.createElement('div');
+          resDiv.className = 'it-image-result';
+          resDiv.style.whiteSpace = 'pre-wrap';
+          resDiv.textContent = response.data || 'No text found';
+          resultContainer.appendChild(resDiv);
         } else {
-          resultContainer.innerHTML = `<p style="color: #ef4444;">Error: ${response.error || 'Failed to translate image'}</p>`;
+          resultContainer.innerHTML = '';
+          const errP = document.createElement('p');
+          errP.style.color = '#ef4444';
+          errP.textContent = `Error: ${response.error || 'Failed to translate image'}`;
+          resultContainer.appendChild(errP);
         }
       } catch (err) {
-        resultContainer.innerHTML = `<p style="color: #ef4444;">Error: ${(err as Error).message}</p>`;
+        resultContainer.innerHTML = '';
+        const errP = document.createElement('p');
+        errP.style.color = '#ef4444';
+        errP.textContent = `Error: ${(err as Error).message}`;
+        resultContainer.appendChild(errP);
       } finally {
         retranslateBtn.disabled = false;
       }
@@ -260,7 +276,11 @@ export async function showImageTranslationModal(srcUrl: string, initialSourceLan
   } catch (err) {
     const fallbackContainer = modal.querySelector('.it-image-result-container') || modal.querySelector('.it-image-text');
     if (fallbackContainer) {
-      fallbackContainer.innerHTML = `<p style="color: #ef4444;">Error: ${(err as Error).message}</p>`;
+      fallbackContainer.innerHTML = '';
+      const errP = document.createElement('p');
+      errP.style.color = '#ef4444';
+      errP.textContent = `Error: ${(err as Error).message}`;
+      fallbackContainer.appendChild(errP);
     }
   }
 }

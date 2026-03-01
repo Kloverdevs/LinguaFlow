@@ -179,10 +179,18 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
         }
       } else {
         const errMsg = !response ? 'Translation failed' : (!response.success ? response.error : 'Translation failed');
-        contentDiv.innerHTML = `<span class="it-selection-error">${errMsg}</span>`;
+        contentDiv.innerHTML = '';
+        const span = document.createElement('span');
+        span.className = 'it-selection-error';
+        span.textContent = errMsg || 'Unknown error';
+        contentDiv.appendChild(span);
       }
     } catch (err) {
-      contentDiv.innerHTML = `<span class="it-selection-error">${(err as Error).message}</span>`;
+      contentDiv.innerHTML = '';
+      const span = document.createElement('span');
+      span.className = 'it-selection-error';
+      span.textContent = (err as Error).message;
+      contentDiv.appendChild(span);
     }
   };
 
@@ -219,10 +227,18 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
         compareText.textContent = resp.data.translatedTexts[0];
       } else {
         const errMsg = !resp ? 'Failed' : (!resp.success ? resp.error : 'No translation returned');
-        compareText.innerHTML = `<span class="it-selection-error">${errMsg}</span>`;
+        compareText.innerHTML = '';
+        const span = document.createElement('span');
+        span.className = 'it-selection-error';
+        span.textContent = errMsg || 'Unknown error';
+        compareText.appendChild(span);
       }
     } catch (err) {
-      compareText.innerHTML = `<span class="it-selection-error">${(err as Error).message}</span>`;
+      compareText.innerHTML = '';
+      const span = document.createElement('span');
+      span.className = 'it-selection-error';
+      span.textContent = (err as Error).message;
+      compareText.appendChild(span);
     }
     compareBtn.style.display = 'none'; // Hide compare button after clicked
   });
@@ -244,18 +260,37 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
       });
 
       if (resp && resp.success) {
-        // Very basic markdown formatting for the explanation
-        const html = resp.data
-          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-          .replace(/\n /g, '<br/>')
-          .replace(/\n/g, '<br/>');
-        explainText.innerHTML = html;
+        explainText.innerHTML = '';
+        const lines = resp.data.split('\n');
+        lines.forEach((line: string, i: number) => {
+          if (line.trim() === '' && i === 0) return; 
+          if (line.trim() === '' && i === lines.length -1) return;
+          if (i > 0) explainText.appendChild(document.createElement('br'));
+          const parts = line.split(/(\*\*.*?\*\*)/g);
+          parts.forEach(part => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+              const strong = document.createElement('strong');
+              strong.textContent = part.slice(2, -2);
+              explainText.appendChild(strong);
+            } else {
+              explainText.appendChild(document.createTextNode(part));
+            }
+          });
+        });
       } else {
         const errMsg = !resp ? 'Failed' : (!resp.success ? resp.error : 'No explanation returned');
-        explainText.innerHTML = `<span class="it-selection-error">${errMsg}</span>`;
+        explainText.innerHTML = '';
+        const span = document.createElement('span');
+        span.className = 'it-selection-error';
+        span.textContent = errMsg || 'Unknown error';
+        explainText.appendChild(span);
       }
     } catch (err) {
-      explainText.innerHTML = `<span class="it-selection-error">${(err as Error).message}</span>`;
+      explainText.innerHTML = '';
+      const span = document.createElement('span');
+      span.className = 'it-selection-error';
+      span.textContent = (err as Error).message;
+      explainText.appendChild(span);
     }
   });
 

@@ -191,10 +191,13 @@ export function replaceLoading(
     // Store original text for hover tooltip
     const originalText = loader.getAttribute('data-immersive-original-html');
     if (originalText) {
-      // Store clean text (strip tags) for tooltip display
-      const temp = document.createElement('div');
-      temp.innerHTML = originalText;
-      loader.setAttribute('data-immersive-original-text', temp.textContent ?? '');
+      // Safely parse the HTML without creating live executable elements
+      try {
+        const doc = new DOMParser().parseFromString(originalText, 'text/html');
+        loader.setAttribute('data-immersive-original-text', doc.body.textContent ?? '');
+      } catch (e) {
+        loader.setAttribute('data-immersive-original-text', '');
+      }
     }
 
     // If element has interactive children (links, buttons), preserve them
