@@ -6,13 +6,25 @@ const storageMock: Record<string, unknown> = {};
 const chrome = {
   storage: {
     local: {
-      get: vi.fn((keys: string | string[], cb?: (result: Record<string, unknown>) => void) => {
+      get: vi.fn((keys: any, cb?: (result: Record<string, unknown>) => void) => {
         const result: Record<string, unknown> = {};
-        const keyArr = typeof keys === 'string' ? [keys] : keys;
-        for (const k of keyArr) {
-          if (k in storageMock) result[k] = storageMock[k];
+        if (keys === null || keys === undefined) {
+          Object.assign(result, storageMock);
+        } else if (typeof keys === 'string') {
+          if (keys in storageMock) result[keys] = storageMock[keys];
+        } else if (Array.isArray(keys)) {
+          for (const k of keys) {
+            if (k in storageMock) result[k] = storageMock[k];
+          }
+        } else if (typeof keys === 'object') {
+          for (const k in keys) {
+            result[k] = k in storageMock ? storageMock[k] : keys[k];
+          }
         }
-        if (cb) cb(result);
+        if (typeof cb === 'function') {
+          cb(result);
+          return Promise.resolve(result);
+        }
         return Promise.resolve(result);
       }),
       set: vi.fn((items: Record<string, unknown>, cb?: () => void) => {
@@ -28,13 +40,25 @@ const chrome = {
       }),
     },
     sync: {
-      get: vi.fn((keys: string | string[], cb?: (result: Record<string, unknown>) => void) => {
+      get: vi.fn((keys: any, cb?: (result: Record<string, unknown>) => void) => {
         const result: Record<string, unknown> = {};
-        const keyArr = typeof keys === 'string' ? [keys] : keys;
-        for (const k of keyArr) {
-          if (k in storageMock) result[k] = storageMock[k];
+        if (keys === null || keys === undefined) {
+          Object.assign(result, storageMock);
+        } else if (typeof keys === 'string') {
+          if (keys in storageMock) result[keys] = storageMock[keys];
+        } else if (Array.isArray(keys)) {
+          for (const k of keys) {
+            if (k in storageMock) result[k] = storageMock[k];
+          }
+        } else if (typeof keys === 'object') {
+          for (const k in keys) {
+            result[k] = k in storageMock ? storageMock[k] : keys[k];
+          }
         }
-        if (cb) cb(result);
+        if (typeof cb === 'function') {
+          cb(result);
+          return Promise.resolve(result);
+        }
         return Promise.resolve(result);
       }),
       set: vi.fn((items: Record<string, unknown>, cb?: () => void) => {
@@ -55,6 +79,7 @@ const chrome = {
     },
   },
   runtime: {
+    id: 'test-extension-id',
     sendMessage: vi.fn(() => Promise.resolve({ success: true })),
     onMessage: {
       addListener: vi.fn(),

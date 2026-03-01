@@ -1,3 +1,4 @@
+import browser from 'webextension-polyfill';
 import React, { useState } from 'react';
 import { getSettings, saveSettings } from '@/shared/storage';
 import { TranslationEngine } from '@/types/translation';
@@ -32,7 +33,7 @@ const Welcome: React.FC = () => {
     
     if (launchTour) {
       // Launch tour by opening a dummy page (e.g. google) with the hash OR just using the active tab
-      chrome.tabs.create({ url: 'https://example.com#linguaflow-tour' });
+      browser.tabs.create({ url: 'https://example.com#linguaflow-tour' });
     }
     
     window.close();

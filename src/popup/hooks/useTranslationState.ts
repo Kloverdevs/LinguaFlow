@@ -1,27 +1,28 @@
+import browser from 'webextension-polyfill';
 import { useState, useCallback } from 'react';
 
 export type TranslationStatus = 'idle' | 'translating' | 'done' | 'error';
 
 async function sendToTab(message: { type: string }): Promise<unknown> {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id) throw new Error('No active tab');
 
   // Try sending message first; if content script isn't loaded, inject it
   try {
-    return await chrome.tabs.sendMessage(tab.id, message);
+    return await browser.tabs.sendMessage(tab.id, message);
   } catch {
     // Content script not loaded — inject it
-    await chrome.scripting.executeScript({
+    await browser.scripting.executeScript({
       target: { tabId: tab.id },
       files: ['content/index.js'],
     });
-    await chrome.scripting.insertCSS({
+    await browser.scripting.insertCSS({
       target: { tabId: tab.id },
       files: ['content/linguaflow.css'],
     });
     // Small delay for script init
     await new Promise((r) => setTimeout(r, 200));
-    return chrome.tabs.sendMessage(tab.id, message);
+    return browser.tabs.sendMessage(tab.id, message);
   }
 }
 

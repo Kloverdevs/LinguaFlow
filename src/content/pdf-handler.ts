@@ -1,3 +1,4 @@
+import browser from 'webextension-polyfill';
 // Dynamic imports used to prevent JSDOM test environments from crashing on pdfjs-dist DOMMatrix references
 let isPdfActive = false;
 
@@ -67,11 +68,11 @@ export async function startPdfTranslation() {
   // Set up PDF.js worker via Blob URL to bypass content script CORS
   const pdfjsLib = await import('pdfjs-dist');
   try {
-    const workerBlob = await fetch(chrome.runtime.getURL('pdfjs/pdf.worker.min.mjs')).then(r => r.blob());
+    const workerBlob = await fetch(browser.runtime.getURL('pdfjs/pdf.worker.min.mjs')).then(r => r.blob());
     pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(workerBlob);
   } catch (err) {
     console.warn('[LinguaFlow] Failed to load PDF JS worker via Blob. It may fall back to fake worker.', err);
-    pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL('pdfjs/pdf.worker.min.mjs');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = browser.runtime.getURL('pdfjs/pdf.worker.min.mjs');
   }
 
   await renderPdfFullPage(window.location.href, root, pdfjsLib);

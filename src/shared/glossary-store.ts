@@ -1,13 +1,11 @@
+import browser from 'webextension-polyfill';
 import { GlossaryEntry } from '@/types/glossary';
 
 const GLOSSARY_STORAGE_KEY = 'linguaflow_glossary';
 
 export async function getGlossary(): Promise<GlossaryEntry[]> {
-  return new Promise((resolve) => {
-    chrome.storage.local.get([GLOSSARY_STORAGE_KEY], (result) => {
-      resolve(result[GLOSSARY_STORAGE_KEY] || []);
-    });
-  });
+  const result = await browser.storage.local.get([GLOSSARY_STORAGE_KEY]);
+  return (result[GLOSSARY_STORAGE_KEY] as GlossaryEntry[]) || [];
 }
 
 export async function saveGlossaryEntry(entry: Omit<GlossaryEntry, 'id' | 'timestamp'>): Promise<GlossaryEntry> {
@@ -29,42 +27,18 @@ export async function saveGlossaryEntry(entry: Omit<GlossaryEntry, 'id' | 'times
     glossary.push(newEntry);
   }
   
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.set({ [GLOSSARY_STORAGE_KEY]: glossary }, () => {
-      if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
-      } else {
-        resolve(newEntry);
-      }
-    });
-  });
+  await browser.storage.local.set({ [GLOSSARY_STORAGE_KEY]: glossary });
+  return newEntry;
 }
 
 export async function removeGlossaryEntry(id: string): Promise<void> {
   const glossary = await getGlossary();
   const updatedList = glossary.filter(e => e.id !== id);
-  
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.set({ [GLOSSARY_STORAGE_KEY]: updatedList }, () => {
-      if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
-      } else {
-        resolve();
-      }
-    });
-  });
+  await browser.storage.local.set({ [GLOSSARY_STORAGE_KEY]: updatedList });
 }
 
 export async function clearGlossary(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.remove([GLOSSARY_STORAGE_KEY], () => {
-      if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
-      } else {
-        resolve();
-      }
-    });
-  });
+  await browser.storage.local.remove([GLOSSARY_STORAGE_KEY]);
 }
 
 export function exportGlossaryAsCsv(glossary: GlossaryEntry[]): string {

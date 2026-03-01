@@ -1,3 +1,4 @@
+import browser from 'webextension-polyfill';
 import { MessageToBackground, MessageResponse } from '@/types/messages';
 import { translateTexts, translateImage, validateEngine, explainGrammar } from './translation-service';
 import { getSettings, updateSettings } from '@/shared/storage';
@@ -7,8 +8,7 @@ import { TranslationEngine } from '@/types/translation';
 import { logger } from '@/shared/logger';
 
 export function setupMessageHandler(): void {
-  chrome.runtime.onMessage.addListener(
-    (
+  browser.runtime.onMessage.addListener(((
       message: MessageToBackground,
       sender: chrome.runtime.MessageSender,
       sendResponse: (response: MessageResponse) => void
@@ -21,8 +21,7 @@ export function setupMessageHandler(): void {
         });
 
       return true; // Keep the message channel open for async response
-    }
-  );
+    }) as any);
 }
 
 async function handleMessage(
@@ -35,7 +34,7 @@ async function handleMessage(
       const tabId = sender.tab?.id;
       
       const onStream = tabId ? (chunk: string) => {
-        chrome.tabs.sendMessage(tabId, {
+        browser.tabs.sendMessage(tabId, {
           type: 'TRANSLATION_STREAM_CHUNK',
           payload: { chunk }
         });

@@ -106,6 +106,46 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
   const fdownBtn = popupElement.querySelector('.fdown-btn') as HTMLButtonElement;
   const saveBtn = popupElement.querySelector('.save-btn') as HTMLButtonElement;
 
+  const header = popupElement.querySelector('.it-selection-header') as HTMLElement;
+  if (header) {
+    header.style.cursor = 'grab';
+    
+    header.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      if ((e.target as Element).tagName === 'SELECT' || (e.target as Element).tagName === 'OPTION') return;
+      
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const rect = popupElement!.getBoundingClientRect();
+      const initialLeft = rect.left;
+      const initialTop = rect.top;
+
+      header.style.cursor = 'grabbing';
+      e.preventDefault();
+
+      const onMouseMove = (moveEvent: MouseEvent) => {
+        if (!popupElement) return;
+        const dx = moveEvent.clientX - startX;
+        const dy = moveEvent.clientY - startY;
+        const newLeft = Math.max(0, Math.min(window.innerWidth - rect.width, initialLeft + dx));
+        const newTop = Math.max(0, Math.min(window.innerHeight - rect.height, initialTop + dy));
+        popupElement.style.left = `${newLeft}px`;
+        popupElement.style.top = `${newTop}px`;
+        popupElement.style.bottom = 'auto';
+        popupElement.style.right = 'auto';
+      };
+
+      const onMouseUp = () => {
+        if (header) header.style.cursor = 'grab';
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      };
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    });
+  }
+
   let currentTranslation = '';
 
   let currentTargetConfig = targetLang;

@@ -1,8 +1,9 @@
+import browser from 'webextension-polyfill';
 import React from 'react';
 
 export function SettingsLink() {
   const openSettings = () => {
-    chrome.runtime.openOptionsPage();
+    browser.runtime.openOptionsPage();
   };
 
   return (

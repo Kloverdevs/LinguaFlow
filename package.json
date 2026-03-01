@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently \"vite build --watch\" \"vite build --watch --config vite.content.config.ts\" \"vite build --watch --config vite.background.config.ts\"",
-    "build": "npm run clean && vite build && vite build --config vite.content.config.ts && vite build --config vite.background.config.ts && npm run copy-manifest",
-    "clean": "rimraf dist",
-    "copy-manifest": "copyfiles -u 1 \"public/**/*\" dist",
+    "build": "npm run build:chrome && npm run build:firefox",
+    "build:chrome": "rimraf dist && cross-env TARGET=chrome vite build && cross-env TARGET=chrome vite build --config vite.content.config.ts && cross-env TARGET=chrome vite build --config vite.background.config.ts && copyfiles -u 1 \"public/**/*\" dist && cross-env TARGET=chrome node scripts/build-manifest.mjs",
+    "build:firefox": "rimraf dist-firefox && cross-env TARGET=firefox vite build && cross-env TARGET=firefox vite build --config vite.content.config.ts && cross-env TARGET=firefox vite build --config vite.background.config.ts && copyfiles -u 1 \"public/**/*\" dist-firefox && cross-env TARGET=firefox node scripts/build-manifest.mjs",
+    "clean": "rimraf dist dist-firefox",
     "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -20,7 +21,8 @@
     "pdfjs-dist": "^5.4.624",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "tesseract.js": "^7.0.0"
+    "tesseract.js": "^7.0.0",
+    "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.287",
@@ -29,10 +31,12 @@
     "@types/pdfjs-dist": "^2.10.377",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/webextension-polyfill": "^0.12.5",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^2.1.9",
     "concurrently": "^9.1.0",
     "copyfiles": "^2.4.1",
+    "cross-env": "^10.1.0",
     "eslint": "^9.0.0",
     "jsdom": "^28.1.0",
     "playwright": "^1.58.2",

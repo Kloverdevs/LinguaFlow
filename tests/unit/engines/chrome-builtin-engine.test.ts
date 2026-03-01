@@ -23,9 +23,12 @@ describe('ChromeBuiltinEngine', () => {
   });
 
   it('proxies translate call correctly to content script', async () => {
-    vi.mocked(chrome.tabs.sendMessage).mockResolvedValueOnce({
-      success: true,
-      data: ['Hola', 'Mundo']
+    vi.mocked(chrome.tabs.sendMessage).mockImplementationOnce((tabId: any, msg: any, cb: any) => {
+      const result = { success: true, data: ['Hola', 'Mundo'] };
+      if (typeof cb === 'function') {
+        cb(result);
+      }
+      return Promise.resolve(result);
     });
 
     const result = await engine.translate(['Hello', 'World'], 'en', 'es');
@@ -33,14 +36,17 @@ describe('ChromeBuiltinEngine', () => {
     expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(1, {
       type: 'EXECUTE_CHROME_BUILTIN',
       payload: { texts: ['Hello', 'World'], sourceLang: 'en', targetLang: 'es' }
-    });
+    }, expect.any(Function));
     expect(result).toEqual(['Hola', 'Mundo']);
   });
 
   it('throws an error if content script responds with failure', async () => {
-    vi.mocked(chrome.tabs.sendMessage).mockResolvedValueOnce({
-      success: false,
-      error: 'Simulated failure'
+    vi.mocked(chrome.tabs.sendMessage).mockImplementationOnce((tabId: any, msg: any, cb: any) => {
+      const result = { success: false, error: 'Simulated failure' };
+      if (typeof cb === 'function') {
+        cb(result);
+      }
+      return Promise.resolve(result);
     });
 
     await expect(engine.translate(['Hello'], 'en', 'es')).rejects.toThrow('Simulated failure');

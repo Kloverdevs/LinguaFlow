@@ -1,8 +1,9 @@
+import browser from 'webextension-polyfill';
 import { sendToContent } from '@/shared/message-bus';
 
 export function setupKeyboardShortcuts(): void {
-  chrome.commands.onCommand.addListener(async (command) => {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  browser.commands.onCommand.addListener(async (command) => {
+    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) return;
 
     switch (command) {

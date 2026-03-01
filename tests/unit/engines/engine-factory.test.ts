@@ -11,6 +11,7 @@ import { YandexEngine } from '@/engines/yandex-engine';
 import { LingvaEngine } from '@/engines/lingva-engine';
 import { MyMemoryEngine } from '@/engines/mymemory-engine';
 import { LibreTranslateEngine } from '@/engines/libre-engine';
+import { ChromeBuiltinEngine } from '@/engines/chrome-builtin-engine';
 
 describe('createEngine', () => {
   it('creates GoogleTranslateEngine for GOOGLE_FREE', () => {
@@ -85,6 +86,13 @@ describe('createEngine', () => {
       apiKey: 'test-key',
     });
     expect(engine).toBeInstanceOf(MicrosoftTranslateEngine);
+  });
+
+  it('creates ChromeBuiltinEngine for CHROME_BUILTIN', () => {
+    const engine = createEngine(TranslationEngine.CHROME_BUILTIN, {
+      engine: TranslationEngine.CHROME_BUILTIN,
+    });
+    expect(engine).toBeInstanceOf(ChromeBuiltinEngine);
   });
 
   it('throws for unknown engine type', () => {

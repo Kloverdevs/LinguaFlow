@@ -1,3 +1,4 @@
+import browser from 'webextension-polyfill';
 import './content.css';
 import './video-subtitles.css';
 import './dictionary-popup.css';
@@ -190,9 +191,8 @@ document.addEventListener('contextmenu', (e) => {
 })();
 
 // Listen for messages from background/popup
-chrome.runtime.onMessage.addListener(
-  (
-    message: MessageToContent,
+browser.runtime.onMessage.addListener(((
+    message: any,
     _sender: chrome.runtime.MessageSender,
     sendResponse: (response: MessageResponse) => void
   ): boolean => {
@@ -265,47 +265,48 @@ chrome.runtime.onMessage.addListener(
 
       case 'SETTINGS_CHANGED': {
         const prev = currentSettings;
-        currentSettings = message.payload;
-        setDisplayMode(currentSettings.displayMode);
-        setDyslexiaFont(!!currentSettings.dyslexiaFont);
-        applyTranslationStyles(currentSettings);
+        const newSettings = message.payload as UserSettings;
+        currentSettings = newSettings;
+        setDisplayMode(newSettings.displayMode);
+        setDyslexiaFont(!!newSettings.dyslexiaFont);
+        applyTranslationStyles(newSettings);
 
         // FAB visibility
-        if (currentSettings.fabEnabled !== prev?.fabEnabled) {
-          setFabVisible(currentSettings.fabEnabled !== false);
+        if (newSettings.fabEnabled !== prev?.fabEnabled) {
+          setFabVisible(newSettings.fabEnabled !== false);
         }
 
         // FAB size
-        if (currentSettings.fabSize !== prev?.fabSize) {
-          updateFabSize(currentSettings.fabSize ?? 48);
+        if (newSettings.fabSize !== prev?.fabSize) {
+          updateFabSize(newSettings.fabSize ?? 48);
         }
 
         // FAB labels (locale change)
-        if (currentSettings.uiLocale !== prev?.uiLocale) {
-          updateFabLabels(getFabLabels(currentSettings));
+        if (newSettings.uiLocale !== prev?.uiLocale) {
+          updateFabLabels(getFabLabels(newSettings));
         }
 
         // Hover mode
-        if (currentSettings.hoverMode && !prev?.hoverMode) {
+        if (newSettings.hoverMode && !prev?.hoverMode) {
           hoverEnabled = true;
-          enableHover(currentSettings.targetLang);
-        } else if (!currentSettings.hoverMode && prev?.hoverMode) {
+          enableHover(newSettings.targetLang);
+        } else if (!newSettings.hoverMode && prev?.hoverMode) {
           hoverEnabled = false;
           disableHover();
         }
 
         if (hoverEnabled) {
-          updateHoverLang(currentSettings.targetLang);
+          updateHoverLang(newSettings.targetLang);
         }
 
         // Update video subtitles language
-        if (currentSettings.targetLang !== prev?.targetLang) {
-          updateVideoSubtitleLanguage(currentSettings.targetLang);
-          updateLiveCaptionsLanguage(currentSettings.targetLang);
+        if (newSettings.targetLang !== prev?.targetLang) {
+          updateVideoSubtitleLanguage(newSettings.targetLang);
+          updateLiveCaptionsLanguage(newSettings.targetLang);
         }
 
         // If display mode changed while translation is active, re-translate
-        if (isActive && prev?.displayMode !== currentSettings.displayMode) {
+        if (isActive && prev?.displayMode !== newSettings.displayMode) {
           removeAllTranslations();
           translatePage().then(() => sendResponse({ success: true, data: null }));
           return true;
@@ -325,7 +326,7 @@ chrome.runtime.onMessage.addListener(
       default:
         return false;
     }
-  }
+  }) as any
 );
 
 async function handleChromeBuiltin(payload: { texts: string[]; sourceLang: string; targetLang: string }): Promise<string[]> {
@@ -535,7 +536,7 @@ async function translateNodes(
               }
             }
           };
-          chrome.runtime.onMessage.addListener(streamListener);
+          browser.runtime.onMessage.addListener(streamListener);
 
           try {
             const response = await sendToBackground<TranslationResult>({
@@ -579,7 +580,7 @@ async function translateNodes(
               showError(loader, (err as Error).message);
             }
           } finally {
-            chrome.runtime.onMessage.removeListener(streamListener);
+            browser.runtime.onMessage.removeListener(streamListener);
           }
         }
       } finally {

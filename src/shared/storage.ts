@@ -1,19 +1,20 @@
+import browser from 'webextension-polyfill';
 import { UserSettings } from '@/types/settings';
 import { DEFAULT_SETTINGS } from '@/constants/defaults';
 
 export async function getSettings(): Promise<UserSettings> {
-  const result = await chrome.storage.local.get('settings');
-  return result.settings ?? DEFAULT_SETTINGS;
+  const result = await browser.storage.local.get('settings');
+  return (result.settings as UserSettings) ?? DEFAULT_SETTINGS;
 }
 
 export async function syncSettings(settings: UserSettings): Promise<void> {
   // Strip engineConfigs to avoid syncing API keys in plaintext
   const { engineConfigs, ...syncableSettings } = settings;
-  await chrome.storage.sync.set({ syncedSettings: syncableSettings });
+  await browser.storage.sync.set({ syncedSettings: syncableSettings });
 }
 
 export async function saveSettings(settings: UserSettings): Promise<void> {
-  await chrome.storage.local.set({ settings });
+  await browser.storage.local.set({ settings });
   
   if (settings.enableSync) {
     await syncSettings(settings).catch(() => {
@@ -43,6 +44,6 @@ export function onSettingsChanged(
       );
     }
   };
-  chrome.storage.onChanged.addListener(listener);
-  return () => chrome.storage.onChanged.removeListener(listener);
+  browser.storage.onChanged.addListener(listener);
+  return () => browser.storage.onChanged.removeListener(listener);
 }

@@ -1,3 +1,4 @@
+import browser from 'webextension-polyfill';
 import { sendToBackground } from '@/shared/message-bus';
 import { MessageResponse } from '@/types/messages';
 import { getSettings } from '@/shared/storage';
@@ -179,12 +180,12 @@ export async function showImageTranslationModal(srcUrl: string, initialSourceLan
           sourceTextarea.value = 'Running local offline OCR...';
           
           const tessLang = mapLangToTesseract(sLang);
-          const workerBlob = await fetch(chrome.runtime.getURL('tesseract/worker.min.js')).then(r => r.blob());
+          const workerBlob = await fetch(browser.runtime.getURL('tesseract/worker.min.js')).then(r => r.blob());
           const workerBlobUrl = URL.createObjectURL(workerBlob);
 
           const worker = await createWorker(tessLang, 1, {
             workerPath: workerBlobUrl,
-            corePath: chrome.runtime.getURL('tesseract/tesseract-core.wasm.js'),
+            corePath: browser.runtime.getURL('tesseract/tesseract-core.wasm.js'),
           });
           
           await worker.setParameters({

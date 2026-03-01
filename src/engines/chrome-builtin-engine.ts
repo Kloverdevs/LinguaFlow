@@ -1,3 +1,4 @@
+import browser from 'webextension-polyfill';
 import { BaseTranslationEngine } from './base-engine';
 import { logger } from '@/shared/logger';
 
@@ -31,14 +32,14 @@ export class ChromeBuiltinEngine extends BaseTranslationEngine {
   async translate(texts: string[], sourceLang: string, targetLang: string): Promise<string[]> {
     if (this.config.tabId) {
       // Proxy the request to the content script running in the active tab since SW can't access window.ai
-      const response = await chrome.tabs.sendMessage(this.config.tabId, {
+      const response = await browser.tabs.sendMessage(this.config.tabId, {
         type: 'EXECUTE_CHROME_BUILTIN',
         payload: { texts, sourceLang, targetLang }
       });
-      if (response && !response.success) {
-        throw new Error(response.error);
+      if (response && !(response as any).success) {
+        throw new Error((response as any).error);
       }
-      return response ? response.data : texts.map(() => 'Error routing offline translation to page context.');
+      return response ? (response as any).data : texts.map(() => 'Error routing offline translation to page context.');
     }
     
     throw new Error('Chrome Built-in engine cannot run in this context without a target tab.');

@@ -1,3 +1,4 @@
+import browser from 'webextension-polyfill';
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useSettings } from './hooks/useSettings';
 import { useTranslationState } from './hooks/useTranslationState';
@@ -242,7 +243,7 @@ export function App() {
 
   // Get current tab hostname
   useEffect(() => {
-    chrome.tabs?.query({ active: true, currentWindow: true }, (tabs) => {
+    browser.tabs?.query({ active: true, currentWindow: true }).then((tabs) => {
       if (tabs[0]?.url) {
         try { setCurrentHost(new URL(tabs[0].url).hostname); } catch {}
       }

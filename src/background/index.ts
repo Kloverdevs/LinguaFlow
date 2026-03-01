@@ -1,3 +1,4 @@
+import browser from 'webextension-polyfill';
 import { setupMessageHandler } from './message-handler';
 import { setupContextMenus } from './context-menu';
 import { setupKeyboardShortcuts } from './keyboard-shortcuts';
@@ -9,46 +10,44 @@ setupMessageHandler();
 setupKeyboardShortcuts();
 
 // Set up context menus and onboarding when the extension is installed
-chrome.runtime.onInstalled.addListener((details) => {
+browser.runtime.onInstalled.addListener((details) => {
   logger.info('Extension installed, setting up context menus');
   setupContextMenus();
   
   if (details.reason === 'install') {
-    chrome.tabs.create({ url: 'welcome/index.html' });
+    browser.tabs.create({ url: 'welcome/index.html' });
   }
 });
 
 // Broadcast settings changes to ALL tabs instantly
-chrome.storage.onChanged.addListener((changes, areaName) => {
+browser.storage.onChanged.addListener(async (changes, areaName) => {
   if (areaName === 'local' && changes.settings?.newValue) {
-    chrome.tabs.query({}, (tabs) => {
-      for (const tab of tabs) {
-        if (tab.id) {
-          chrome.tabs.sendMessage(tab.id, {
-            type: 'SETTINGS_CHANGED',
-            payload: changes.settings!.newValue,
-          }).catch(() => {
-            // Tab may not have content script loaded — ignore
-          });
-        }
+    const tabs = await browser.tabs.query({});
+    for (const tab of tabs) {
+      if (tab.id) {
+        browser.tabs.sendMessage(tab.id, {
+          type: 'SETTINGS_CHANGED',
+          payload: changes.settings!.newValue,
+        }).catch(() => {
+          // Tab may not have content script loaded — ignore
+        });
       }
-    });
+    }
   }
 
   // Handle incoming sync changes from other devices
   if (areaName === 'sync' && changes.syncedSettings?.newValue) {
-    chrome.storage.local.get('settings', (result) => {
-      const currentLocal = result.settings || {};
-      
-      // Merge the incoming settings, but strictly preserve the local API keys
-      const newLocal = {
-        ...currentLocal,
-        ...changes.syncedSettings.newValue,
-        engineConfigs: currentLocal.engineConfigs || {},
-      };
-      
-      chrome.storage.local.set({ settings: newLocal });
-    });
+    const result = await browser.storage.local.get('settings');
+    const currentLocal = (result.settings as Record<string, any>) || {};
+    
+    // Merge the incoming settings, but strictly preserve the local API keys
+    const newLocal = {
+      ...currentLocal,
+      ...changes.syncedSettings.newValue,
+      engineConfigs: currentLocal.engineConfigs || {},
+    };
+    
+    await browser.storage.local.set({ settings: newLocal });
   }
 });
 

@@ -1,17 +1,18 @@
+import browser from 'webextension-polyfill';
 import { sendToContent } from '@/shared/message-bus';
 import { logger } from '@/shared/logger';
 
 async function ensureContentScript(tabId: number): Promise<void> {
   try {
     // Try sending a ping first; if it fails, inject the script
-    await chrome.tabs.sendMessage(tabId, { type: '__PING__' });
+    await browser.tabs.sendMessage(tabId, { type: '__PING__' });
   } catch {
     // Content script not loaded — inject it
-    await chrome.scripting.executeScript({
+    await browser.scripting.executeScript({
       target: { tabId },
       files: ['content/index.js'],
     });
-    await chrome.scripting.insertCSS({
+    await browser.scripting.insertCSS({
       target: { tabId },
       files: ['content/linguaflow.css'],
     });
@@ -19,25 +20,25 @@ async function ensureContentScript(tabId: number): Promise<void> {
 }
 
 export function setupContextMenus(): void {
-  chrome.contextMenus.create({
+  browser.contextMenus.create({
     id: 'translate-page',
     title: 'Translate Entire Page',
     contexts: ['page'],
   });
 
-  chrome.contextMenus.create({
+  browser.contextMenus.create({
     id: 'translate-selection',
     title: 'Translate Selection',
     contexts: ['selection'],
   });
 
-  chrome.contextMenus.create({
+  browser.contextMenus.create({
     id: 'translate-image',
     title: 'Translate Image',
     contexts: ['image'],
   });
 
-  chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  browser.contextMenus.onClicked.addListener(async (info, tab) => {
     if (!tab?.id) return;
 
     try {

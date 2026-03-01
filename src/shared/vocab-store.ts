@@ -1,13 +1,11 @@
+import browser from 'webextension-polyfill';
 import { VocabEntry } from '@/types/vocabulary';
 
 const VOCAB_STORAGE_KEY = 'linguaflow_vocabulary';
 
 export async function getVocabulary(): Promise<VocabEntry[]> {
-  return new Promise((resolve) => {
-    chrome.storage.local.get([VOCAB_STORAGE_KEY], (result) => {
-      resolve(result[VOCAB_STORAGE_KEY] || []);
-    });
-  });
+  const result = await browser.storage.local.get([VOCAB_STORAGE_KEY]);
+  return (result[VOCAB_STORAGE_KEY] as VocabEntry[]) || [];
 }
 
 export async function saveVocabEntry(entry: Omit<VocabEntry, 'id' | 'timestamp'>): Promise<VocabEntry> {
@@ -26,43 +24,18 @@ export async function saveVocabEntry(entry: Omit<VocabEntry, 'id' | 'timestamp'>
   };
 
   vocabList.push(newEntry);
-  
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.set({ [VOCAB_STORAGE_KEY]: vocabList }, () => {
-      if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
-      } else {
-        resolve(newEntry);
-      }
-    });
-  });
+  await browser.storage.local.set({ [VOCAB_STORAGE_KEY]: vocabList });
+  return newEntry;
 }
 
 export async function removeVocabEntry(id: string): Promise<void> {
   const vocabList = await getVocabulary();
   const updatedList = vocabList.filter(e => e.id !== id);
-  
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.set({ [VOCAB_STORAGE_KEY]: updatedList }, () => {
-      if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
-      } else {
-        resolve();
-      }
-    });
-  });
+  await browser.storage.local.set({ [VOCAB_STORAGE_KEY]: updatedList });
 }
 
 export async function clearVocabulary(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.remove([VOCAB_STORAGE_KEY], () => {
-      if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
-      } else {
-        resolve();
-      }
-    });
-  });
+  await browser.storage.local.remove([VOCAB_STORAGE_KEY]);
 }
 
 export function exportVocabAsCsv(vocabList: VocabEntry[]): string {

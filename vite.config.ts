@@ -2,6 +2,8 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 
+const outDirName = process.env.TARGET === 'firefox' ? 'dist-firefox' : 'dist';
+
 export default defineConfig({
   plugins: [react()],
   base: './',
@@ -12,7 +14,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: resolve(__dirname, 'dist'),
+    outDir: resolve(__dirname, outDirName),
     emptyOutDir: false,
     rollupOptions: {
       input: {
