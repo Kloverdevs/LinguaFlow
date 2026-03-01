@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "LinguaFlow",
+  "name": "__MSG_appName__",
   "version": "1.0.0",
-  "description": "Bilingual webpage translation with side-by-side original and translated text",
+  "description": "__MSG_appDesc__",
+  "default_locale": "en",
 
   "permissions": [
     "activeTab",

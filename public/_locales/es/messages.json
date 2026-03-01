@@ -1,0 +1,10 @@
+{
+  "appName": {
+    "message": "LinguaFlow",
+    "description": "Name of the extension"
+  },
+  "appDesc": {
+    "message": "Asistente bilingüe de lectura y traducción para páginas web, archivos PDF e imágenes.",
+    "description": "Short summary of the extension"
+  }
+}
