@@ -6,6 +6,8 @@ import { getEngineInfo } from '@/constants/engines';
 import { logger } from '@/shared/logger';
 import { getGlossary } from '@/shared/glossary-store';
 import { GlossaryEntry } from '@/types/glossary';
+import { UserSettings } from '@/types/settings';
+import { createWorker } from 'tesseract.js';
 
 const MAX_CONCURRENT_BATCHES = 3;
 
@@ -234,6 +236,52 @@ export async function explainGrammar(text: string, sourceLang: string, targetLan
   return engine.explain(text, sourceLang, targetLang);
 }
 
+// Map our language codes to Tesseract codes
+function mapLangToTesseract(lang: string): string {
+  if (!lang || lang === 'auto') return 'eng';
+  const map: Record<string, string> = {
+    'en': 'eng', 'es': 'spa', 'fr': 'fra', 'de': 'deu', 'it': 'ita', 
+    'pt': 'por', 'ru': 'rus', 'ja': 'jpn', 'zh': 'chi_sim', 'zh-CN': 'chi_sim',
+    'zh-TW': 'chi_tra', 'ko': 'kor', 'ar': 'ara', 'nl': 'nld', 'tr': 'tur'
+  };
+  return map[lang.split('-')[0]] || 'eng';
+}
+
+async function performTesseractFallback(
+  imageBase64: string, 
+  sourceLang: string, 
+  targetLang: string, 
+  engineType: TranslationEngine, 
+  settings: UserSettings
+): Promise<string> {
+  logger.info(`Vision engine not available. Falling back to tesseract.js OCR for language: ${sourceLang}`);
+  const tessLang = mapLangToTesseract(sourceLang);
+  
+  // Create Tesseract worker pointing to local files to satisfy MV3 CSP
+  const worker = await createWorker(tessLang, 1, {
+    workerPath: chrome.runtime.getURL('tesseract/worker.min.js'),
+    corePath: chrome.runtime.getURL('tesseract/tesseract-core.wasm.js'),
+  });
+  
+  const ret = await worker.recognize(imageBase64);
+  const extractedText = ret.data.text.trim();
+  
+  await worker.terminate();
+
+  if (!extractedText) {
+    throw new Error('OCR Failed: Could not extract any text from the image.');
+  }
+
+  logger.info(`Extracted ${extractedText.length} characters using OCR. Translating...`);
+
+  // Translate the extracted text using the primary configured engine
+  const engineConfig = settings.engineConfigs?.[engineType] ?? { engine: engineType };
+  const engine = createEngine(engineType, engineConfig);
+  
+  const translations = await engine.translate([extractedText], sourceLang, targetLang);
+  return translations[0];
+}
+
 export async function translateImage(
   imageBase64: string,
   sourceLang: string,
@@ -243,26 +291,43 @@ export async function translateImage(
   const settings = await getSettings();
   const engineType = engineOverride ?? settings.engine;
 
-  // Image translation requires vision capabilities (OpenAI/Claude)
-  const visionEngineType = [
-    engineType,
-    TranslationEngine.OPENAI,
-    TranslationEngine.CLAUDE
-  ].find(e => e === TranslationEngine.OPENAI || e === TranslationEngine.CLAUDE);
+  let useVisionAPI = false;
+  let visionEngineType: TranslationEngine | null = null;
+  let engineConfig: EngineConfig | null = null;
 
-  if (!visionEngineType) {
-    throw new Error('Please configure OpenAI or Claude in settings to use Image Translation.');
+  // Check if primary engine is a Vision Engine with a key
+  if (engineType === TranslationEngine.OPENAI || engineType === TranslationEngine.CLAUDE) {
+    const config = settings.engineConfigs?.[engineType] ?? { engine: engineType };
+    if (config.apiKey) {
+      useVisionAPI = true;
+      visionEngineType = engineType;
+      engineConfig = config;
+    }
   }
 
-  const engineConfig: EngineConfig = settings.engineConfigs?.[visionEngineType] ?? { engine: visionEngineType };
-  if (!engineConfig.apiKey) {
-    throw new Error(`API key required for ${getEngineInfo(visionEngineType).name}. Please configure it in settings.`);
+  // If primary isn't vision-capable, see if they have OpenAI/Claude configured as a fallback
+  if (!useVisionAPI) {
+    const fallbackTypes = [TranslationEngine.OPENAI, TranslationEngine.CLAUDE];
+    for (const type of fallbackTypes) {
+      const config = settings.engineConfigs?.[type];
+      if (config && config.apiKey) {
+        useVisionAPI = true;
+        visionEngineType = type;
+        engineConfig = config;
+        break;
+      }
+    }
   }
 
-  const engine = createEngine(visionEngineType, engineConfig);
-  if (!engine.translateImage) {
-    throw new Error(`Engine ${visionEngineType} does not support image translation yet.`);
+  // Use the Vision API if we found configured keys
+  if (useVisionAPI && visionEngineType && engineConfig) {
+    logger.info(`Using Vision API: ${visionEngineType}`);
+    const engine = createEngine(visionEngineType, engineConfig);
+    if (engine.translateImage) {
+      return engine.translateImage(imageBase64, sourceLang, targetLang);
+    }
   }
-  
-  return engine.translateImage(imageBase64, sourceLang, targetLang);
+
+  // If no API keys for OpenAI/Claude exist, fallback to Tesseract JS + Standard Translation Engine
+  return await performTesseractFallback(imageBase64, sourceLang, targetLang, engineType, settings);
 }
