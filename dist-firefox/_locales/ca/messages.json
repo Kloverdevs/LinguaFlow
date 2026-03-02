@@ -1,0 +1,8 @@
+{
+  "appName": {
+    "message": "LinguaFlow - Traductor web i PDF bilingüe"
+  },
+  "appDesc": {
+    "message": "Traductor bilingüe de codi obert per a pàgines web, imatges i PDF mitjançant motors d'IA (OpenAI, Claude) i modes locals fora de ..."
+  }
+}

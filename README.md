@@ -12,7 +12,7 @@ Built with **React 19**, **TypeScript 5.7**, **Vite 6**, and **Chrome Manifest V
 
 - **Bilingual display** — translated text appears below each original paragraph with an accent border
   <br>
-  <img src="./screenshots/bilingual-mode.png" width="600" alt="Bilingual Mode Example" />
+  <img src="./store-assets/store_screenshot_1_final.png" width="800" alt="Bilingual Mode Example" />
 - **Replace mode** — swap original text with translation entirely
 - **10 translation engines** — 6 free (no API key), 4 paid with API key validation
 - **29 languages** — auto-detect source language, 28 target languages
@@ -126,7 +126,7 @@ Starts all three Vite watchers in parallel (popup/options, content script, backg
 2. Hover over any paragraph — it highlights and translates after a brief pause
 3. Hover mode works independently: enable it alongside full-page translation, and only hovered paragraphs get individually translated while the rest remain stable
 
-<img src="./screenshots/selection-translation.png" width="600" alt="Hover & Selection Translation" />
+<img src="./store-assets/store_screenshot_2_final.png" width="800" alt="Hover & Selection Translation" />
 
 ### Floating Action Button (FAB)
 
@@ -135,7 +135,7 @@ A draggable button on every page with quick actions:
 - **Bilingual Mode** toggle
 - **Hover Translate** toggle
 
-<img src="./screenshots/floating-action-button.png" width="400" alt="Floating Action Button Menu" />
+
 
 Drag it anywhere on the page. In Settings, you can disable the FAB or adjust its size (32–72px). The FAB menu translates when you change the UI language.
 
@@ -146,13 +146,13 @@ Right-click on a page or image for:
 - **Translate Page** — translates the entire page
 - **Inspect Image Text** — invokes built-in OCR to analyze and translate flat images
 
-<img src="./screenshots/image-translation.png" width="600" alt="Image OCR Translation" />
+<img src="./store-assets/store_screenshot_3_final.png" width="800" alt="Image OCR Translation" />
 
 ### PDF Rendering
 
 Drop a local PDF or visit an online PDF to activate the split-view native renderer. LinguaFlow intercepts the file, preserves identical structural formatting, and allows parallel block translations natively over the canvas.
 
-<img src="./screenshots/pdf-translated.png" width="600" alt="Split-screen PDF Translation" />
+<img src="./store-assets/store_screenshot_4_final.png" width="800" alt="Split-screen PDF Translation" />
 
 ---
 
@@ -160,7 +160,7 @@ Drop a local PDF or visit an online PDF to activate the split-view native render
 
 Access settings via the gear icon in the popup. The sleek interfaces allow deep customization:
 <br>
-<img src="./screenshots/popup-interface.png" width="360" alt="Main UI Popup" />
+
 
 | Section | Options |
 |---------|---------|

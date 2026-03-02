@@ -1,0 +1,8 @@
+{
+  "appName": {
+    "message": "LinguaFlow - バイリンガル Web および PDF 翻訳者"
+  },
+  "appDesc": {
+    "message": "AI エンジン (OpenAI、Claude) とローカル オフライン モードを介した、Web ページ、画像、PDF 用のオープンソースのバイリンガル翻訳ツールです。"
+  }
+}

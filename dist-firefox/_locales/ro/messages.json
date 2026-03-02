@@ -1,0 +1,8 @@
+{
+  "appName": {
+    "message": "LinguaFlow - Traducător bilingv pentru web..."
+  },
+  "appDesc": {
+    "message": "Traducător bilingv open-source pentru pagini web, imagini și PDF-uri prin motoare AI (OpenAI, Claude) și moduri locale offline."
+  }
+}

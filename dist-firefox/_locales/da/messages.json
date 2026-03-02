@@ -1,0 +1,8 @@
+{
+  "appName": {
+    "message": "LinguaFlow - Tosproget web- og PDF-oversætter"
+  },
+  "appDesc": {
+    "message": "Open-source tosproget oversætter til websider, billeder og PDF'er via AI-motorer (OpenAI, Claude) og lokale offline-tilstande."
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "appName": {
+    "message": "LinguaFlow - 이중 언어 웹 및 PDF 번역기"
+  },
+  "appDesc": {
+    "message": "AI 엔진(OpenAI, Claude) 및 로컬 오프라인 모드를 통해 웹 페이지, 이미지 및 PDF를 위한 오픈 소스 이중 언어 번역기입니다."
+  }
+}
