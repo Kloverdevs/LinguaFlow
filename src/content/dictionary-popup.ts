@@ -85,10 +85,18 @@ async function showDictionaryPopup(text: string, x: number, y: number, sourceLan
       transDiv.textContent = currentTranslation;
     } else {
       const errMsg = !response ? 'Translation failed' : (!response.success ? response.error : 'Translation failed');
-      transDiv.innerHTML = `<i style="color:red">${errMsg}</i>`;
+      transDiv.innerHTML = '';
+      const i = document.createElement('i');
+      i.style.color = 'red';
+      i.textContent = errMsg;
+      transDiv.appendChild(i);
     }
   } catch (err) {
-    transDiv.innerHTML = '<i style="color:red">Error connecting to service</i>';
+    transDiv.innerHTML = '';
+    const i = document.createElement('i');
+    i.style.color = 'red';
+    i.textContent = 'Error connecting to service';
+    transDiv.appendChild(i);
   }
 
   listenBtn.addEventListener('click', () => {

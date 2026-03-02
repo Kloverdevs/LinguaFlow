@@ -109,4 +109,50 @@ const chrome = {
   },
 };
 
+globalThis.speechSynthesis = {
+  cancel: vi.fn(),
+  speak: vi.fn(),
+  getVoices: vi.fn(() => []),
+  pause: vi.fn(),
+  resume: vi.fn(),
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
+  dispatchEvent: vi.fn(() => true),
+  pending: false,
+  speaking: false,
+  paused: false,
+  onvoiceschanged: null,
+};
+
+globalThis.SpeechSynthesisUtterance = vi.fn().mockImplementation((text) => ({
+  text,
+  lang: '',
+  pitch: 1,
+  rate: 1,
+  volume: 1,
+  voice: null,
+  onerror: null,
+  onstart: null,
+  onend: null,
+  onpause: null,
+  onresume: null,
+  onmark: null,
+  onboundary: null,
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
+  dispatchEvent: vi.fn(() => true)
+})) as any;
+
+// Stub DOMParser to prevent jsdom timeout loops when parsing raw HTML fragments
+globalThis.DOMParser = class DOMParserMock {
+  parseFromString(string: string) {
+    // Return a dummy document structure that satisfies .body.textContent
+    return {
+      body: {
+        textContent: string.replace(/<[^>]*>?/gm, '') // Strips HTML tags for the textContent mock
+      }
+    };
+  }
+} as any;
+
 Object.assign(globalThis, { chrome });
