@@ -23,7 +23,8 @@ export function startObserving(
           if (
             node instanceof HTMLElement &&
             !node.hasAttribute('data-immersive-translated') &&
-            !node.hasAttribute('data-immersive-block')
+            !node.hasAttribute('data-immersive-block') &&
+            !node.closest('[data-immersive-skip]')
           ) {
             hasNewContent = true;
             break;
@@ -39,7 +40,9 @@ export function startObserving(
       debounceTimer = setTimeout(async () => {
         const walkedNodes = await walkDOMAsync(document.body);
         const newNodes = walkedNodes.filter(
-          (n: TranslatableNode) => !n.element.hasAttribute('data-immersive-translated')
+          (n: TranslatableNode) =>
+            !n.element.hasAttribute('data-immersive-translated') &&
+            !n.element.closest('[data-immersive-skip]')
         );
         if (newNodes.length > 0 && onNewNodesCallback) {
           onNewNodesCallback(newNodes);

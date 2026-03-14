@@ -233,11 +233,21 @@ export function showError(loader: HTMLElement, error: string): void {
   const effectiveMode = getEffectiveMode(loader);
   if (effectiveMode === 'replace') {
     loader.classList.remove('immersive-translate-loading');
+    // Mark as skip BEFORE DOM modification to prevent MutationObserver re-detection
+    loader.setAttribute('data-immersive-skip', 'true');
+    loader.removeAttribute('data-immersive-translated');
     const originalHTML = loader.getAttribute('data-immersive-original-html');
     if (originalHTML !== null) {
-      loader.innerHTML = originalHTML;
+      const doc = new DOMParser().parseFromString(originalHTML, 'text/html');
+      loader.textContent = '';
+      for (const child of Array.from(doc.body.childNodes)) {
+        loader.appendChild(child.cloneNode(true));
+      }
     }
-    loader.removeAttribute('data-immersive-translated');
+    loader.removeAttribute('data-immersive-original-html');
+    loader.removeAttribute('data-immersive-original-lang');
+    // Allow re-detection after DOM settles
+    setTimeout(() => loader.removeAttribute('data-immersive-skip'), 1000);
   } else {
     loader.classList.remove('it-loading');
     if (error) {
@@ -274,7 +284,11 @@ export function removeAllTranslations(): void {
     const originalLang = htmlEl.getAttribute('data-immersive-original-lang');
 
     if (originalHTML !== null) {
-      htmlEl.innerHTML = originalHTML;
+      const doc = new DOMParser().parseFromString(originalHTML, 'text/html');
+      htmlEl.textContent = '';
+      for (const child of Array.from(doc.body.childNodes)) {
+        htmlEl.appendChild(child.cloneNode(true));
+      }
     }
     if (originalLang) {
       htmlEl.setAttribute('lang', originalLang);
