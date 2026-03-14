@@ -42,6 +42,9 @@ export async function toggleReadingMode() {
 function renderReaderUI(title: string, byline: string, htmlContent: string) {
   readerOverlay = document.createElement('div');
   readerOverlay.className = 'it-reader-overlay';
+  readerOverlay.setAttribute('role', 'dialog');
+  readerOverlay.setAttribute('aria-modal', 'true');
+  readerOverlay.setAttribute('aria-label', 'Reader mode');
 
   // Build the Header Navigation
   const nav = document.createElement('div');
@@ -121,6 +124,12 @@ function renderReaderUI(title: string, byline: string, htmlContent: string) {
   document.body.style.overflow = 'hidden';
 
   document.body.appendChild(readerOverlay);
+
+  // Close on Escape key
+  const escHandler = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') { closeReadingMode(); document.removeEventListener('keydown', escHandler); }
+  };
+  document.addEventListener('keydown', escHandler);
 
   // Animate in
   requestAnimationFrame(() => {

@@ -191,21 +191,25 @@ export async function showImageTranslationModal(srcUrl: string, initialSourceLan
           const workerBlob = await fetch(browser.runtime.getURL('tesseract/worker.min.js')).then(r => r.blob());
           const workerBlobUrl = URL.createObjectURL(workerBlob);
 
-          const worker = await createWorker(tessLang, 1, {
-            workerPath: workerBlobUrl,
-            corePath: browser.runtime.getURL('tesseract/tesseract-core.wasm.js'),
-          });
-          
-          await worker.setParameters({
-            tessedit_pageseg_mode: PSM.AUTO,
-          });
+          try {
+            const worker = await createWorker(tessLang, 1, {
+              workerPath: workerBlobUrl,
+              corePath: browser.runtime.getURL('tesseract/tesseract-core.wasm.js'),
+            });
 
-          // Enhance the image before giving it to Tesseract
-          const processedImage = await preprocessImageForOcr(imageBase64);
-          const ret = await worker.recognize(processedImage);
-          cachedExtractedText = ret.data.text.trim();
-          sourceTextarea.value = cachedExtractedText;
-          await worker.terminate();
+            await worker.setParameters({
+              tessedit_pageseg_mode: PSM.AUTO,
+            });
+
+            // Enhance the image before giving it to Tesseract
+            const processedImage = await preprocessImageForOcr(imageBase64);
+            const ret = await worker.recognize(processedImage);
+            cachedExtractedText = ret.data.text.trim();
+            sourceTextarea.value = cachedExtractedText;
+            await worker.terminate();
+          } finally {
+            URL.revokeObjectURL(workerBlobUrl);
+          }
 
           if (!cachedExtractedText) {
             throw new Error('OCR Failed: Could not extract any text from the image.');

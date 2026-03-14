@@ -42,6 +42,9 @@ export function createFloatingButton(cbs: FabCallbacks, labels: FabLabels, size 
 
   fab = document.createElement('div');
   fab.id = 'immersive-translate-fab';
+  fab.setAttribute('role', 'button');
+  fab.setAttribute('aria-label', 'LinguaFlow translation menu');
+  fab.setAttribute('tabindex', '0');
   applyFabSize(size);
   fab.innerHTML = `<svg viewBox="0 0 24 24" width="${Math.round(size * 0.46)}" height="${Math.round(size * 0.46)}">
     <path d="M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0014.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04z"/>
@@ -51,9 +54,15 @@ export function createFloatingButton(cbs: FabCallbacks, labels: FabLabels, size 
   // Use mousedown/up for drag + click detection
   fab.addEventListener('mousedown', handleFabMouseDown);
   fab.addEventListener('click', handleFabClick);
+  fab.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleMenu(); }
+    if (e.key === 'Escape' && isMenuOpen) closeMenu();
+  });
 
   fabMenu = document.createElement('div');
   fabMenu.id = 'immersive-translate-fab-menu';
+  fabMenu.setAttribute('role', 'menu');
+  fabMenu.setAttribute('aria-label', 'Translation options');
   buildMenuHTML(labels); // binds click handlers internally
 
   document.body.appendChild(fabMenu);
@@ -63,6 +72,9 @@ export function createFloatingButton(cbs: FabCallbacks, labels: FabLabels, size 
     if (isMenuOpen && fab && fabMenu && !fab.contains(e.target as Node) && !fabMenu.contains(e.target as Node)) {
       closeMenu();
     }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isMenuOpen) closeMenu();
   });
 }
 
@@ -97,8 +109,9 @@ function buildMenuHTML(labels: FabLabels): void {
     </button>
     ` : ''}
   `;
-  // Re-bind click handlers
+  // Add roles and re-bind click handlers
   fabMenu.querySelectorAll('.immersive-fab-menu-item').forEach((btn) => {
+    btn.setAttribute('role', 'menuitem');
     btn.addEventListener('click', handleMenuAction);
   });
 }

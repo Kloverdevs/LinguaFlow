@@ -8,6 +8,8 @@ import { TARGET_LANGUAGES } from '@/constants/languages';
 let popupElement: HTMLElement | null = null;
 let currentSettings: any = null;
 let activeDragCleanup: (() => void) | null = null;
+let activeCloseHandler: ((e: MouseEvent) => void) | null = null;
+let closeHandlerTimer: ReturnType<typeof setTimeout> | null = null;
 
 // Keep settings in sync so popup always uses the latest target language
 onSettingsChanged((newSettings) => {
@@ -27,7 +29,9 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
 
   popupElement = document.createElement('div');
   popupElement.className = 'it-selection-card';
-  
+  popupElement.setAttribute('role', 'dialog');
+  popupElement.setAttribute('aria-label', 'Translation popup');
+
   // Clamping to visible viewport
   const maxX = window.innerWidth - 350;
   const maxY = window.innerHeight - 200;
@@ -301,15 +305,15 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
   });
 
   // Bind Actions
-  copyBtn.addEventListener('click', () => {
-    if (currentTranslation) {
-      navigator.clipboard.writeText(currentTranslation);
-      const originalHtml = copyBtn.innerHTML;
-      copyBtn.innerHTML = `
-        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-        Copied
-      `;
-      setTimeout(() => copyBtn.innerHTML = originalHtml, 2000);
+  copyBtn.addEventListener('click', async () => {
+    if (!currentTranslation) return;
+    try {
+      await navigator.clipboard.writeText(currentTranslation);
+      copyBtn.textContent = 'Copied';
+      setTimeout(() => { copyBtn.textContent = 'Copy'; }, 2000);
+    } catch {
+      copyBtn.textContent = 'Failed';
+      setTimeout(() => { copyBtn.textContent = 'Copy'; }, 2000);
     }
   });
 
@@ -354,19 +358,28 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
     }
   });
 
-  // Close on outside click
-  const closeHandler = (e: MouseEvent) => {
+  // Close on outside click or Escape
+  activeCloseHandler = (e: MouseEvent) => {
     if (popupElement && !popupElement.contains(e.target as Node)) {
       closeSelectionPopup();
-      document.removeEventListener('mousedown', closeHandler);
     }
   };
-  setTimeout(() => document.addEventListener('mousedown', closeHandler), 100);
+  closeHandlerTimer = setTimeout(() => {
+    if (activeCloseHandler) document.addEventListener('mousedown', activeCloseHandler);
+    closeHandlerTimer = null;
+  }, 100);
+
+  const escapeHandler = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') { closeSelectionPopup(); document.removeEventListener('keydown', escapeHandler); }
+  };
+  document.addEventListener('keydown', escapeHandler);
 }
 
 export function closeSelectionPopup() {
   activeDragCleanup?.();
   activeDragCleanup = null;
+  if (closeHandlerTimer) { clearTimeout(closeHandlerTimer); closeHandlerTimer = null; }
+  if (activeCloseHandler) { document.removeEventListener('mousedown', activeCloseHandler); activeCloseHandler = null; }
   if (popupElement) {
     popupElement.remove();
     popupElement = null;

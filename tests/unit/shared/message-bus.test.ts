@@ -1,4 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+// Mock webextension-polyfill before importing message-bus
+vi.mock('webextension-polyfill', () => ({
+  default: {
+    runtime: {
+      sendMessage: vi.fn(),
+      onMessage: {
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+      },
+    },
+    tabs: {
+      sendMessage: vi.fn(),
+      query: vi.fn(),
+    },
+  },
+}));
+
+import browser from 'webextension-polyfill';
 import { sendToBackground, sendToContent, sendToActiveTab } from '@/shared/message-bus';
 
 describe('message-bus', () => {
@@ -7,25 +26,21 @@ describe('message-bus', () => {
   });
 
   describe('sendToBackground', () => {
-    it('sends message via chrome.runtime.sendMessage', async () => {
-      chrome.runtime.sendMessage = vi.fn(() =>
-        Promise.resolve({ success: true, data: null })
-      );
+    it('sends message via browser.runtime.sendMessage', async () => {
+      vi.mocked(browser.runtime.sendMessage).mockResolvedValue({ success: true, data: null });
 
       const result = await sendToBackground({ type: 'GET_SETTINGS' });
-      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
+      expect(browser.runtime.sendMessage).toHaveBeenCalledWith({
         type: 'GET_SETTINGS',
       });
       expect(result).toEqual({ success: true, data: null });
     });
 
     it('sends translate request with payload', async () => {
-      chrome.runtime.sendMessage = vi.fn(() =>
-        Promise.resolve({
-          success: true,
-          data: { translatedTexts: ['Hola'] },
-        })
-      );
+      vi.mocked(browser.runtime.sendMessage).mockResolvedValue({
+        success: true,
+        data: { translatedTexts: ['Hola'] },
+      });
 
       const result = await sendToBackground({
         type: 'TRANSLATE_REQUEST',
@@ -36,13 +51,11 @@ describe('message-bus', () => {
   });
 
   describe('sendToContent', () => {
-    it('sends message via chrome.tabs.sendMessage', async () => {
-      chrome.tabs.sendMessage = vi.fn(() =>
-        Promise.resolve({ success: true, data: null })
-      );
+    it('sends message via browser.tabs.sendMessage', async () => {
+      vi.mocked(browser.tabs.sendMessage).mockResolvedValue({ success: true, data: null });
 
       await sendToContent(42, { type: 'TRANSLATE_PAGE' });
-      expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(42, {
+      expect(browser.tabs.sendMessage).toHaveBeenCalledWith(42, {
         type: 'TRANSLATE_PAGE',
       });
     });
@@ -50,25 +63,21 @@ describe('message-bus', () => {
 
   describe('sendToActiveTab', () => {
     it('queries active tab and sends message', async () => {
-      chrome.tabs.query = vi.fn(() =>
-        Promise.resolve([{ id: 99 }])
-      );
-      chrome.tabs.sendMessage = vi.fn(() =>
-        Promise.resolve({ success: true, data: null })
-      );
+      vi.mocked(browser.tabs.query).mockResolvedValue([{ id: 99 }] as any);
+      vi.mocked(browser.tabs.sendMessage).mockResolvedValue({ success: true, data: null });
 
       await sendToActiveTab({ type: 'TOGGLE_TRANSLATION' });
-      expect(chrome.tabs.query).toHaveBeenCalledWith({
+      expect(browser.tabs.query).toHaveBeenCalledWith({
         active: true,
         currentWindow: true,
       });
-      expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(99, {
+      expect(browser.tabs.sendMessage).toHaveBeenCalledWith(99, {
         type: 'TOGGLE_TRANSLATION',
       });
     });
 
     it('throws when no active tab found', async () => {
-      chrome.tabs.query = vi.fn(() => Promise.resolve([]));
+      vi.mocked(browser.tabs.query).mockResolvedValue([]);
 
       await expect(
         sendToActiveTab({ type: 'TOGGLE_TRANSLATION' })
