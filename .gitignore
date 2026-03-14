@@ -1,4 +1,7 @@
 node_modules/
 dist/
+dist-firefox/
+*.zip
 *.log
+coverage/
 .DS_Store

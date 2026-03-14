@@ -1,8 +1,0 @@
-{
-  "appName": {
-    "message": "LinguaFlow - Bilingual Web & PDF Translator"
-  },
-  "appDesc": {
-    "message": "Open-source bilingual translator for web pages, images, and PDFs via AI engines (OpenAI, Claude) and local offline modes."
-  }
-}

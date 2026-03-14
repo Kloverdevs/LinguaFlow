@@ -185,7 +185,15 @@ async function renderPdfFullPage(url: string, container: HTMLElement, pdfjsLib: 
     }
   } catch (err) {
     console.error('[LinguaFlow] PDF render error:', err);
-    container.innerHTML = `<h2 style="color:white">Failed to render PDF using LinguaFlow PDF.js</h2><p style="color:red">${(err as Error).message}</p>`;
+    container.textContent = '';
+    const h2 = document.createElement('h2');
+    h2.style.color = 'white';
+    h2.textContent = 'Failed to render PDF using LinguaFlow PDF.js';
+    const p = document.createElement('p');
+    p.style.color = 'red';
+    p.textContent = (err as Error).message;
+    container.appendChild(h2);
+    container.appendChild(p);
   }
 }
 

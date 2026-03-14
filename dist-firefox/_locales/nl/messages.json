@@ -1,8 +1,0 @@
-{
-  "appName": {
-    "message": "LinguaFlow - Tweetalige web- en pdf-vertaler"
-  },
-  "appDesc": {
-    "message": "Open-source tweetalige vertaler voor webpagina's, afbeeldingen en pdf's via AI-engines (OpenAI, Claude) en lokale offline modi."
-  }
-}
