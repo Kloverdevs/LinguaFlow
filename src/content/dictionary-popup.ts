@@ -5,6 +5,7 @@ import { saveVocabEntry } from '@/shared/vocab-store';
 import { getActiveSiteRule } from '@/shared/site-rulesHelper';
 
 let popupElement: HTMLElement | null = null;
+let popupRequestId = 0;
 
 export function setupDictionaryListener() {
   document.addEventListener('dblclick', async (e) => {
@@ -39,6 +40,7 @@ export function setupDictionaryListener() {
 
 async function showDictionaryPopup(text: string, x: number, y: number, sourceLang: string, targetLang: string, engine: any) {
   closePopup();
+  const requestId = ++popupRequestId;
 
   popupElement = document.createElement('div');
   popupElement.className = 'it-dictionary-card';
@@ -80,6 +82,7 @@ async function showDictionaryPopup(text: string, x: number, y: number, sourceLan
       payload: { texts: [text], sourceLang, targetLang, engine },
     });
 
+    if (requestId !== popupRequestId) return; // Stale response
     if (response && response.success && response.data.translatedTexts.length > 0) {
       currentTranslation = response.data.translatedTexts[0];
       transDiv.textContent = currentTranslation;

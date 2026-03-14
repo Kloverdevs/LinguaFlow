@@ -38,7 +38,7 @@ export class GoogleTranslateEngine extends BaseTranslationEngine {
         const params = new URLSearchParams();
         params.append('q', joinedText);
         
-        const response = await fetch(url, {
+        const response = await this.fetchWithTimeout(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8' },
           body: params.toString()

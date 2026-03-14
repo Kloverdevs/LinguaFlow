@@ -18,7 +18,7 @@ export class MicrosoftTranslateEngine extends BaseTranslationEngine {
 
     const body = texts.map((text) => ({ Text: text }));
 
-    const response = await fetch(url, {
+    const response = await this.fetchWithTimeout(url, {
       method: 'POST',
       headers: {
         'Ocp-Apim-Subscription-Key': apiKey,

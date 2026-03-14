@@ -141,7 +141,11 @@ export async function showImageTranslationModal(srcUrl: string, initialSourceLan
 
     const VISION_PLACEHOLDER = '[Translated directly from image via AI Vision API]';
 
+    let isTranslating = false;
+
     const executeTranslation = async () => {
+      if (isTranslating) return;
+      isTranslating = true;
       resultContainer.innerHTML = '<div class="it-spinner"></div><p>Translating image...</p>';
       retranslateBtn.disabled = true;
       const sLang = sourceSelect.value;
@@ -246,6 +250,7 @@ export async function showImageTranslationModal(srcUrl: string, initialSourceLan
         resultContainer.appendChild(errP);
       } finally {
         retranslateBtn.disabled = false;
+        isTranslating = false;
       }
     };
 

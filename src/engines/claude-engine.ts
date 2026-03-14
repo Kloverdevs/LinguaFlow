@@ -61,7 +61,7 @@ ${texts.length > 1 ? `- Multiple texts are separated by "${SEPARATOR.trim()}". T
     const endpoint = this.config.customEndpoint ?? 'https://api.anthropic.com/v1/messages';
     const model = this.config.model ?? 'claude-sonnet-4-5-20250514';
 
-    const response = await fetch(endpoint, {
+    const response = await this.fetchWithTimeout(endpoint, {
       method: 'POST',
       headers: {
         'x-api-key': this.config.apiKey!,
@@ -90,29 +90,33 @@ ${texts.length > 1 ? `- Multiple texts are separated by "${SEPARATOR.trim()}". T
     if (onStream && response.body) {
       const reader = response.body.getReader();
       const decoder = new TextDecoder('utf-8');
-      
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\\n');
-        
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6);
-            if (data === '[DONE]') continue;
-            try {
-              const parsed = JSON.parse(data);
-              if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
-                content += parsed.delta.text;
-                onStream(parsed.delta.text);
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
+                  content += parsed.delta.text;
+                  onStream(parsed.delta.text);
+                }
+              } catch (e) {
+                // ignore parse errors mid-stream
               }
-            } catch (e) {
-              // ignore parse errors mid-stream
             }
           }
         }
+      } finally {
+        reader.cancel().catch(() => {});
       }
     } else {
       const data = await response.json();
@@ -142,7 +146,7 @@ ${texts.length > 1 ? `- Multiple texts are separated by "${SEPARATOR.trim()}". T
     const endpoint = this.config.customEndpoint ?? 'https://api.anthropic.com/v1/messages';
     const model = this.config.model ?? 'claude-sonnet-4-5-20250514';
 
-    const response = await fetch(endpoint, {
+    const response = await this.fetchWithTimeout(endpoint, {
       method: 'POST',
       headers: {
         'x-api-key': this.config.apiKey!,
@@ -197,7 +201,7 @@ ${texts.length > 1 ? `- Multiple texts are separated by "${SEPARATOR.trim()}". T
     const mediaType = match[1];
     const data = match[2];
 
-    const response = await fetch(endpoint, {
+    const response = await this.fetchWithTimeout(endpoint, {
       method: 'POST',
       headers: {
         'x-api-key': this.config.apiKey!,
@@ -225,7 +229,7 @@ ${texts.length > 1 ? `- Multiple texts are separated by "${SEPARATOR.trim()}". T
           }
         ],
       }),
-    });
+    }, 60000);
 
     if (!response.ok) {
       const errText = await response.text();

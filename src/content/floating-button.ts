@@ -54,11 +54,7 @@ export function createFloatingButton(cbs: FabCallbacks, labels: FabLabels, size 
 
   fabMenu = document.createElement('div');
   fabMenu.id = 'immersive-translate-fab-menu';
-  buildMenuHTML(labels);
-
-  fabMenu.querySelectorAll('.immersive-fab-menu-item').forEach((btn) => {
-    btn.addEventListener('click', handleMenuAction);
-  });
+  buildMenuHTML(labels); // binds click handlers internally
 
   document.body.appendChild(fabMenu);
   document.body.appendChild(fab);

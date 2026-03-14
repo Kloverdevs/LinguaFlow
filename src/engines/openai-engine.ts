@@ -61,7 +61,7 @@ ${texts.length > 1 ? `- Multiple texts are separated by "${SEPARATOR.trim()}". T
     const endpoint = this.config.customEndpoint ?? 'https://api.openai.com/v1/chat/completions';
     const model = this.config.model ?? 'gpt-4o-mini';
 
-    const response = await fetch(endpoint, {
+    const response = await this.fetchWithTimeout(endpoint, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.config.apiKey}`,
@@ -88,30 +88,34 @@ ${texts.length > 1 ? `- Multiple texts are separated by "${SEPARATOR.trim()}". T
     if (onStream && response.body) {
       const reader = response.body.getReader();
       const decoder = new TextDecoder('utf-8');
-      
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\\n');
-        
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6);
-            if (data === '[DONE]') continue;
-            try {
-              const parsed = JSON.parse(data);
-              const contentText = parsed.choices[0]?.delta?.content;
-              if (contentText) {
-                content += contentText;
-                onStream(contentText);
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+              try {
+                const parsed = JSON.parse(data);
+                const contentText = parsed.choices[0]?.delta?.content;
+                if (contentText) {
+                  content += contentText;
+                  onStream(contentText);
+                }
+              } catch (e) {
+                // Ignore malformed JSON or other parse errors mid-stream
               }
-            } catch (e) {
-              // Ignore malformed JSON or other parse errors mid-stream
             }
           }
         }
+      } finally {
+        reader.cancel().catch(() => {});
       }
     } else {
       const data = await response.json();
@@ -142,7 +146,7 @@ ${texts.length > 1 ? `- Multiple texts are separated by "${SEPARATOR.trim()}". T
     const endpoint = this.config.customEndpoint ?? 'https://api.openai.com/v1/chat/completions';
     const model = this.config.model ?? 'gpt-4o-mini';
 
-    const response = await fetch(endpoint, {
+    const response = await this.fetchWithTimeout(endpoint, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.config.apiKey}`,
@@ -190,7 +194,7 @@ ${texts.length > 1 ? `- Multiple texts are separated by "${SEPARATOR.trim()}". T
     const model = this.config.model?.includes('gpt-4') ? this.config.model : 'gpt-4o-mini';
     const endpoint = this.config.customEndpoint ?? 'https://api.openai.com/v1/chat/completions';
 
-    const response = await fetch(endpoint, {
+    const response = await this.fetchWithTimeout(endpoint, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.config.apiKey}`,
@@ -210,7 +214,7 @@ ${texts.length > 1 ? `- Multiple texts are separated by "${SEPARATOR.trim()}". T
         max_tokens: 2048,
         temperature: 0.3,
       }),
-    });
+    }, 60000);
 
     if (!response.ok) {
       const errText = await response.text();

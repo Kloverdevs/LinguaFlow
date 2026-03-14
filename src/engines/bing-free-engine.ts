@@ -30,7 +30,7 @@ export class BingFreeEngine extends BaseTranslationEngine {
 
     const body = texts.map((text) => ({ Text: text }));
 
-    const response = await fetch(url, {
+    const response = await this.fetchWithTimeout(url, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

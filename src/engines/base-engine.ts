@@ -18,6 +18,25 @@ export abstract class BaseTranslationEngine {
 
   abstract getMaxBatchSize(): number;
 
+  protected async fetchWithTimeout(
+    url: string,
+    options: RequestInit,
+    timeoutMs = 30000
+  ): Promise<Response> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetch(url, { ...options, signal: controller.signal });
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') {
+        throw new Error(`Request timed out after ${timeoutMs / 1000}s`);
+      }
+      throw err;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
   async detectLanguage(_text: string): Promise<string | null> {
     return null;
   }

@@ -47,7 +47,7 @@ export class DeepLEngine extends BaseTranslationEngine {
       body.formality = this.config.formality === 'formal' ? 'more' : 'less';
     }
 
-    const response = await fetch(this.getEndpoint(), {
+    const response = await this.fetchWithTimeout(this.getEndpoint(), {
       method: 'POST',
       headers: {
         'Authorization': `DeepL-Auth-Key ${this.config.apiKey}`,
