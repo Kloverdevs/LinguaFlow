@@ -8,7 +8,7 @@
     "build": "npm run build:chrome && npm run build:firefox && npm run zip",
     "build:chrome": "rimraf dist && cross-env TARGET=chrome vite build && cross-env TARGET=chrome vite build --config vite.content.config.ts && cross-env TARGET=chrome vite build --config vite.background.config.ts && copyfiles -u 1 \"public/**/*\" dist && cross-env TARGET=chrome node scripts/build-manifest.mjs",
     "build:firefox": "rimraf dist-firefox && cross-env TARGET=firefox vite build && cross-env TARGET=firefox vite build --config vite.content.config.ts && cross-env TARGET=firefox vite build --config vite.background.config.ts && copyfiles -u 1 \"public/**/*\" dist-firefox && cross-env TARGET=firefox node scripts/build-manifest.mjs",
-    "zip": "node -e \"const { execSync } = require('child_process'); const fs = require('fs'); try { if(fs.existsSync('linguaflow-chrome.zip')) fs.unlinkSync('linguaflow-chrome.zip'); if(fs.existsSync('linguaflow-firefox.zip')) fs.unlinkSync('linguaflow-firefox.zip'); execSync('powershell Compress-Archive -Path dist\\\\* -DestinationPath linguaflow-chrome.zip -Force'); execSync('powershell Compress-Archive -Path dist-firefox\\\\* -DestinationPath linguaflow-firefox.zip -Force'); console.log('Successfully generated linguaflow-chrome.zip and linguaflow-firefox.zip'); } catch(e) { console.error(e.message); }\"",
+    "zip": "node scripts/zip.mjs",
     "clean": "rimraf dist dist-firefox linguaflow-chrome.zip linguaflow-firefox.zip",
     "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",

@@ -1,16 +1,17 @@
 import { DisplayMode } from '@/types/settings';
 import { isPdfPage } from './pdf-handler';
+import { setTrustedHTML, createLoadingDots } from './safe-dom';
 
 let currentMode: DisplayMode = 'replace';
 let ttsEnabled = true;
 let dyslexiaFontEnabled = false;
 
 /** Safely parse an HTML string into child nodes for restoration.
- *  Uses a detached div so parsed nodes never enter the live document until cloned. */
+ *  Uses createContextualFragment to avoid innerHTML assignment. */
 function parseHTMLNodes(html: string): NodeList {
-  const container = document.createElement('div');
-  container.innerHTML = html;
-  return container.childNodes;
+  const range = document.createRange();
+  const frag = range.createContextualFragment(html);
+  return frag.childNodes;
 }
 
 export function setDisplayMode(mode: DisplayMode): void {
@@ -100,7 +101,8 @@ function createTtsButton(text: string, lang: string): HTMLButtonElement {
   const btn = document.createElement('button');
   btn.className = 'it-tts-btn';
   btn.title = 'Listen';
-  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg>';
+  btn.setAttribute('aria-label', 'Listen to pronunciation');
+  setTrustedHTML(btn, '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg>');
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
     speakText(text, lang);
@@ -112,9 +114,10 @@ function createFeedbackButton(isUp: boolean): HTMLButtonElement {
   const btn = document.createElement('button');
   btn.className = `it-tts-btn it-feedback-${isUp ? 'up' : 'down'}`;
   btn.title = isUp ? 'Good translation' : 'Poor translation';
-  btn.innerHTML = isUp 
-    ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2zM21 12l-3 7H9V9l4.34-4.34L12 10h9v2z"/></svg>'
-    : '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm0 12l-4.34 4.34L12 14H3v-2l3-7h9v10zm4-12h4v12h-4z"/></svg>';
+  btn.setAttribute('aria-label', isUp ? 'Good translation' : 'Poor translation');
+  setTrustedHTML(btn, isUp
+    ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2zM21 12l-3 7H9V9l4.34-4.34L12 10h9v2z"/></svg>'
+    : '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm0 12l-4.34 4.34L12 14H3v-2l3-7h9v10zm4-12h4v12h-4z"/></svg>');
   
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -126,6 +129,9 @@ function createFeedbackButton(isUp: boolean): HTMLButtonElement {
 }
 
 // ─── Show-original tooltip for replace mode ─────────────────────────
+
+// Track tooltip listeners so they can be cleaned up when translations are removed
+const tooltipCleanups: Array<() => void> = [];
 
 function addHoverOriginalTooltip(el: HTMLElement): void {
   const originalText = el.getAttribute('data-immersive-original-text');
@@ -151,6 +157,12 @@ function addHoverOriginalTooltip(el: HTMLElement): void {
 
   el.addEventListener('mouseenter', show);
   el.addEventListener('mouseleave', hide);
+
+  tooltipCleanups.push(() => {
+    el.removeEventListener('mouseenter', show);
+    el.removeEventListener('mouseleave', hide);
+    hide();
+  });
 }
 
 // ─── Loading ────────────────────────────────────────────────────────
@@ -178,7 +190,7 @@ export function showLoading(originalEl: HTMLElement): HTMLElement {
   if (isInline) block.classList.add('it-inline-block');
   if (dyslexiaFontEnabled) block.classList.add('it-dyslexia-font');
   block.setAttribute('data-immersive-block', 'true');
-  block.innerHTML = '<span class="it-loading-dots"><span></span><span></span><span></span></span>';
+  block.appendChild(createLoadingDots());
   originalEl.parentNode?.insertBefore(block, originalEl.nextSibling);
   return block;
 }
@@ -195,14 +207,14 @@ export function replaceLoading(
     loader.classList.remove('immersive-translate-loading');
     loader.classList.add('it-replace-enter');
     loader.setAttribute('lang', targetLang);
+    loader.setAttribute('aria-live', 'polite');
 
     // Store original text for hover tooltip
     const originalText = loader.getAttribute('data-immersive-original-html');
     if (originalText) {
-      // Safely extract text content from HTML
-      const tpl = document.createElement('template');
-      tpl.innerHTML = originalText;
-      loader.setAttribute('data-immersive-original-text', tpl.content.textContent ?? '');
+      // Safely extract text content from HTML using DOMParser
+      const parsed = new DOMParser().parseFromString(originalText, 'text/html');
+      loader.setAttribute('data-immersive-original-text', parsed.body.textContent ?? '');
     }
 
     // If element has interactive children (links, buttons), preserve them
@@ -221,6 +233,7 @@ export function replaceLoading(
     loader.classList.remove('it-loading');
     loader.classList.add('it-bilingual-enter');
     loader.setAttribute('lang', targetLang);
+    loader.setAttribute('aria-live', 'polite');
     loader.textContent = translatedText;
 
     // Add TTS button for bilingual blocks
@@ -274,6 +287,10 @@ export function removeAllTranslations(): void {
   if (window.speechSynthesis) {
     window.speechSynthesis.cancel();
   }
+
+  // Clean up tooltip event listeners
+  for (const cleanup of tooltipCleanups) cleanup();
+  tooltipCleanups.length = 0;
 
   // Remove original-text tooltips
   document.querySelectorAll('.it-original-tooltip').forEach((el) => el.remove());

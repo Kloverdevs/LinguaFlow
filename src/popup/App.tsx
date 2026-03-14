@@ -15,7 +15,7 @@ type Page = 'main' | 'settings';
 /* ─── Engine Icons (inline SVGs) ─── */
 function GoogleIcon({ size = 18 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24">
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" fill="#4285F4"/>
       <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
       <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A10.96 10.96 0 001 12c0 1.77.42 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
@@ -26,7 +26,7 @@ function GoogleIcon({ size = 18 }: { size?: number }) {
 
 function BingIcon({ size = 18 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M5 3v14.5l4.5 2.5 7-4v-4.5L10 8.5V3L5 5z" fill="#0078D4"/>
       <path d="M10 8.5l6.5 3V16l-7 4 4.5 2.5V16l-4-2.5z" fill="#0078D4" opacity=".7"/>
     </svg>
@@ -35,7 +35,7 @@ function BingIcon({ size = 18 }: { size?: number }) {
 
 function YandexIcon({ size = 18 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <rect width="24" height="24" rx="4" fill="#FC3F1D"/>
       <path d="M13.5 18h-2V12.6L8.2 6h2.3l2.3 4.8L15 6h2.2l-3.7 6.6V18z" fill="#fff"/>
     </svg>
@@ -44,7 +44,7 @@ function YandexIcon({ size = 18 }: { size?: number }) {
 
 function LingvaIcon({ size = 18 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <rect width="24" height="24" rx="4" fill="#4CAF50"/>
       <path d="M7 8h10M9 8v1.5c0 2.5-1.5 4-3 5M12 8v1.5c0 2.5 1.5 4 3 5M8 17l4-3 4 3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
@@ -53,7 +53,7 @@ function LingvaIcon({ size = 18 }: { size?: number }) {
 
 function MyMemoryIcon({ size = 18 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <rect width="24" height="24" rx="4" fill="#FF9800"/>
       <path d="M6 7h5v10H6z" fill="#fff" opacity=".9"/>
       <path d="M13 7h5v10h-5z" fill="#fff" opacity=".6"/>
@@ -64,7 +64,7 @@ function MyMemoryIcon({ size = 18 }: { size?: number }) {
 
 function LibreIcon({ size = 18 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <rect width="24" height="24" rx="4" fill="#1976D2"/>
       <text x="12" y="16" textAnchor="middle" fill="#fff" fontSize="11" fontWeight="700" fontFamily="sans-serif">LT</text>
     </svg>
@@ -76,7 +76,7 @@ function MicrosoftIcon({ size = 18 }: { size?: number }) {
   const g = size * 0.04;
   const off = size * 0.5 + g / 2;
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
       <rect x={size * 0.08} y={size * 0.08} width={s} height={s} fill="#F25022"/>
       <rect x={off} y={size * 0.08} width={s} height={s} fill="#7FBA00"/>
       <rect x={size * 0.08} y={off} width={s} height={s} fill="#00A4EF"/>
@@ -87,7 +87,7 @@ function MicrosoftIcon({ size = 18 }: { size?: number }) {
 
 function DeepLIcon({ size = 18 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <rect width="24" height="24" rx="4" fill="#0F2B46"/>
       <path d="M12 4L5 12l7 8 7-8-7-8z" fill="#0FA1E0" opacity=".7"/>
       <path d="M12 6l-5 6 5 6 5-6-5-6z" fill="#0DC5F4"/>
@@ -98,7 +98,7 @@ function DeepLIcon({ size = 18 }: { size?: number }) {
 
 function OpenAIIcon({ size = 18 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="#10A37F">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="#10A37F" aria-hidden="true">
       <path d="M22.28 9.37a5.98 5.98 0 00-.52-4.93 6.07 6.07 0 00-6.54-2.94A5.98 5.98 0 0010.7.04 6.07 6.07 0 004.6 3.2a5.98 5.98 0 00-4 2.9 6.07 6.07 0 00.74 7.12 5.98 5.98 0 00.52 4.93 6.07 6.07 0 006.54 2.94 5.98 5.98 0 004.52 1.46 6.07 6.07 0 006.1-3.16 5.98 5.98 0 004-2.9 6.07 6.07 0 00-.74-7.12zM13.3 21.37a4.48 4.48 0 01-2.88-1.05l.14-.08 4.78-2.76a.77.77 0 00.4-.68v-6.74l2.02 1.17a.07.07 0 01.04.06v5.58a4.5 4.5 0 01-4.5 4.5zM3.82 17.5a4.48 4.48 0 01-.54-3.02l.14.09 4.78 2.76a.78.78 0 00.78 0l5.83-3.37v2.33a.07.07 0 01-.03.06l-4.83 2.79a4.5 4.5 0 01-6.13-1.64zM2.5 7.87a4.48 4.48 0 012.34-1.97V11.52a.77.77 0 00.4.68l5.83 3.37-2.02 1.17a.07.07 0 01-.07 0L4.15 13.95A4.5 4.5 0 012.5 7.87zm16.95 3.94l-5.83-3.37L15.64 7.27a.07.07 0 01.07 0l4.83 2.79a4.5 4.5 0 01-.7 8.12v-5.7a.77.77 0 00-.39-.67zm2.01-3.03l-.14-.09-4.78-2.76a.78.78 0 00-.78 0l-5.83 3.37V6.97a.07.07 0 01.03-.06l4.83-2.79a4.5 4.5 0 016.67 4.66zM8.68 13.05l-2.02-1.17a.07.07 0 01-.04-.06V6.24a4.5 4.5 0 017.38-3.45l-.14.08-4.78 2.76a.77.77 0 00-.4.68v6.74zm1.1-2.37l2.6-1.5 2.6 1.5v3l-2.6 1.5-2.6-1.5v-3z"/>
     </svg>
   );
@@ -106,7 +106,7 @@ function OpenAIIcon({ size = 18 }: { size?: number }) {
 
 function ClaudeIcon({ size = 18 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M16.98 3.41L12.76 14.2l-1.4-4.13L16.98 3.41z" fill="#D97757"/>
       <path d="M11.36 10.07L7.02 3.41h3.94l2.2 6.46-1.8.2z" fill="#D97757"/>
       <path d="M7.02 3.41L11.36 10.07 9.76 14.82l-5.7-8.84L7.02 3.41z" fill="#D97757"/>
@@ -146,11 +146,11 @@ function ThemeToggle({ theme, onChange, lightTitle, darkTitle }: { theme: ThemeM
   return (
     <button className="theme-btn" onClick={handleToggle} title={isDark ? lightTitle : darkTitle}>
       {isDark ? (
-        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
         </svg>
       ) : (
-        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="4"/>
           <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
         </svg>
@@ -204,7 +204,7 @@ function EngineDropdown({
       <button className="engine-dropdown-trigger" ref={triggerRef} onClick={handleOpen}>
         <EngineIcon engineId={value} size={16} />
         <span className="engine-dropdown-name">{current?.name}</span>
-        <svg className={`engine-dropdown-chevron ${open ? 'open' : ''}`} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg className={`engine-dropdown-chevron ${open ? 'open' : ''}`} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M6 9l6 6 6-6"/>
         </svg>
       </button>
@@ -324,7 +324,7 @@ export function App() {
 
   const handleToggleMode = (newMode: DisplayMode) => {
     updateSettings({ displayMode: newMode });
-    sendToActiveTab({ type: 'SETTINGS_CHANGED', payload: { ...settings, displayMode: newMode } }).catch(() => {});
+    sendToActiveTab({ type: 'SETTINGS_CHANGED', payload: { ...settings, displayMode: newMode } }).catch(() => { /* tab may not have content script */ });
   };
 
   // Engine visibility guards: at least one category must stay enabled
@@ -365,7 +365,7 @@ export function App() {
             <div className="header-actions">
               <ThemeToggle theme={settings.theme} onChange={(th) => updateSettings({ theme: th })} lightTitle={t.switchToLight} darkTitle={t.switchToDark} />
               <button className="btn-icon" onClick={() => setPage('settings')} title={t.settings}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/>
                   <circle cx="12" cy="12" r="3"/>
                 </svg>
@@ -387,7 +387,7 @@ export function App() {
               </select>
             </div>
             <div className="lang-arrow">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M5 12h14M13 6l6 6-6 6"/>
               </svg>
             </div>
@@ -482,7 +482,7 @@ export function App() {
         <div className="settings-scroll">
           <header className="settings-header">
             <button className="back-btn" onClick={() => setPage('main')}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M19 12H5M12 19l-7-7 7-7"/>
               </svg>
             </button>

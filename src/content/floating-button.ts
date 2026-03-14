@@ -1,5 +1,6 @@
 import { DisplayMode } from '@/types/settings';
 import { isPdfPage } from './pdf-handler';
+import { setTrustedHTML } from './safe-dom';
 
 let fab: HTMLElement | null = null;
 let fabMenu: HTMLElement | null = null;
@@ -14,6 +15,10 @@ let dragStartY = 0;
 let fabStartX = 0;
 let fabStartY = 0;
 const DRAG_THRESHOLD = 5;
+
+// Event listener references for cleanup
+let documentClickHandler: ((e: MouseEvent) => void) | null = null;
+let documentEscapeHandler: ((e: KeyboardEvent) => void) | null = null;
 
 type FabCallbacks = {
   onTranslatePage: () => void;
@@ -45,11 +50,13 @@ export function createFloatingButton(cbs: FabCallbacks, labels: FabLabels, size 
   fab.setAttribute('role', 'button');
   fab.setAttribute('aria-label', 'LinguaFlow translation menu');
   fab.setAttribute('tabindex', '0');
+  fab.setAttribute('aria-expanded', 'false');
+  fab.setAttribute('aria-haspopup', 'menu');
   applyFabSize(size);
-  fab.innerHTML = `<svg viewBox="0 0 24 24" width="${Math.round(size * 0.46)}" height="${Math.round(size * 0.46)}">
+  setTrustedHTML(fab, `<svg viewBox="0 0 24 24" width="${Math.round(size * 0.46)}" height="${Math.round(size * 0.46)}" aria-hidden="true">
     <path d="M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0014.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04z"/>
     <path d="M18.5 10l-4.5 12h2l1.12-3h4.75L23 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
-  </svg>`;
+  </svg>`);
 
   // Use mousedown/up for drag + click detection
   fab.addEventListener('mousedown', handleFabMouseDown);
@@ -68,19 +75,35 @@ export function createFloatingButton(cbs: FabCallbacks, labels: FabLabels, size 
   document.body.appendChild(fabMenu);
   document.body.appendChild(fab);
 
-  document.addEventListener('click', (e) => {
+  // Store references for cleanup
+  documentClickHandler = (e: MouseEvent) => {
     if (isMenuOpen && fab && fabMenu && !fab.contains(e.target as Node) && !fabMenu.contains(e.target as Node)) {
       closeMenu();
     }
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && isMenuOpen) closeMenu();
-  });
+  };
+  documentEscapeHandler = (e: KeyboardEvent) => {
+    if (!isMenuOpen) return;
+    if (e.key === 'Escape') { closeMenu(); return; }
+    // Arrow key navigation for menu
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!fabMenu) return;
+      const items = Array.from(fabMenu.querySelectorAll('.immersive-fab-menu-item:not([style*="display: none"])')) as HTMLElement[];
+      if (!items.length) return;
+      const current = items.indexOf(document.activeElement as HTMLElement);
+      const next = e.key === 'ArrowDown'
+        ? (current + 1) % items.length
+        : (current - 1 + items.length) % items.length;
+      items[next].focus();
+    }
+  };
+  document.addEventListener('click', documentClickHandler);
+  document.addEventListener('keydown', documentEscapeHandler);
 }
 
 function buildMenuHTML(labels: FabLabels): void {
   if (!fabMenu) return;
-  fabMenu.innerHTML = `
+  setTrustedHTML(fabMenu, `
     <div class="immersive-fab-menu-header">LinguaFlow</div>
     <button class="immersive-fab-menu-item" data-action="translate">
       <span class="immersive-fab-menu-icon">&#9654;</span>
@@ -108,7 +131,7 @@ function buildMenuHTML(labels: FabLabels): void {
       <span>${labels.readerMode}</span>
     </button>
     ` : ''}
-  `;
+  `);
   // Add roles and re-bind click handlers
   fabMenu.querySelectorAll('.immersive-fab-menu-item').forEach((btn) => {
     btn.setAttribute('role', 'menuitem');
@@ -247,8 +270,12 @@ function openMenu(): void {
   isMenuOpen = true;
   fabMenu.classList.add('open');
   fab.classList.add('active');
+  fab.setAttribute('aria-expanded', 'true');
   updateMenuState();
   updateMenuPosition();
+  // Focus first visible menu item
+  const firstItem = fabMenu.querySelector('.immersive-fab-menu-item:not([style*="display: none"])') as HTMLElement;
+  firstItem?.focus();
 }
 
 function closeMenu(): void {
@@ -256,6 +283,8 @@ function closeMenu(): void {
   isMenuOpen = false;
   fabMenu.classList.remove('open');
   fab.classList.remove('active');
+  fab.setAttribute('aria-expanded', 'false');
+  fab.focus();
 }
 
 function updateMenuState(): void {
@@ -323,12 +352,23 @@ export function updateFabProgress(current: number, total: number): void {
   if (!badge) {
     badge = document.createElement('span');
     badge.className = 'it-fab-progress';
+    badge.setAttribute('role', 'status');
+    badge.setAttribute('aria-live', 'polite');
     fab.appendChild(badge);
   }
   badge.textContent = `${current}/${total}`;
 }
 
 export function destroyFloatingButton(): void {
+  // Clean up document-level event listeners
+  if (documentClickHandler) {
+    document.removeEventListener('click', documentClickHandler);
+    documentClickHandler = null;
+  }
+  if (documentEscapeHandler) {
+    document.removeEventListener('keydown', documentEscapeHandler);
+    documentEscapeHandler = null;
+  }
   fab?.remove();
   fabMenu?.remove();
   fab = null;

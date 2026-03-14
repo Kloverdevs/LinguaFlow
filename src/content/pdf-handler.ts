@@ -67,15 +67,20 @@ export async function startPdfTranslation() {
 
   // Set up PDF.js worker via Blob URL to bypass content script CORS
   const pdfjsLib = await import('pdfjs-dist');
+  let workerBlobUrl: string | null = null;
   try {
     const workerBlob = await fetch(browser.runtime.getURL('pdfjs/pdf.worker.min.mjs')).then(r => r.blob());
-    pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(workerBlob);
+    workerBlobUrl = URL.createObjectURL(workerBlob);
+    pdfjsLib.GlobalWorkerOptions.workerSrc = workerBlobUrl;
   } catch (err) {
     console.warn('[LinguaFlow] Failed to load PDF JS worker via Blob. It may fall back to fake worker.', err);
     pdfjsLib.GlobalWorkerOptions.workerSrc = browser.runtime.getURL('pdfjs/pdf.worker.min.mjs');
   }
 
   await renderPdfFullPage(window.location.href, root, pdfjsLib);
+
+  // Revoke blob URL after worker is initialized to free memory
+  if (workerBlobUrl) URL.revokeObjectURL(workerBlobUrl);
 }
 
 async function renderPdfFullPage(url: string, container: HTMLElement, pdfjsLib: any) {

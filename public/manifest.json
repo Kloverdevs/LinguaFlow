@@ -18,7 +18,13 @@
     "https://api.deepl.com/*",
     "https://api.openai.com/*",
     "https://api.anthropic.com/*",
-    "https://api.cognitive.microsofttranslator.com/*"
+    "https://api.cognitive.microsofttranslator.com/*",
+    "https://api-edge.cognitive.microsofttranslator.com/*",
+    "https://translate.yandex.net/*",
+    "https://translate.yandex.com/*",
+    "https://api.mymemory.translated.net/*",
+    "https://libretranslate.com/*",
+    "https://lingva.ml/*"
   ],
 
   "background": {
@@ -26,9 +32,13 @@
     "type": "module"
   },
 
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": ["http://*/*", "https://*/*", "file:///*"],
       "js": ["content/index.js"],
       "css": ["content/linguaflow.css"],
       "run_at": "document_idle"
@@ -85,7 +95,7 @@
   "web_accessible_resources": [
     {
       "resources": ["icons/*", "icons/logo.png", "pdfjs/*", "tesseract/*"],
-      "matches": ["<all_urls>"]
+      "matches": ["https://*/*", "http://*/*"]
     }
   ]
 }

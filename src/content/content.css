@@ -286,7 +286,7 @@
   padding: 10px 16px 8px;
   font-size: 11px;
   font-weight: 700;
-  color: #64748b;
+  color: #475569;
   text-transform: uppercase;
   letter-spacing: 0.8px;
 }
@@ -585,4 +585,40 @@
   font-family: 'OpenDyslexic', 'Comic Sans MS', sans-serif !important;
   letter-spacing: 0.05em !important;
   word-spacing: 0.1em !important;
+}
+
+/* ─── Accessibility: Focus Visible ───────────────────────────── */
+#immersive-translate-fab:focus-visible,
+.immersive-fab-menu-item:focus-visible,
+.it-onboarding-btn:focus-visible,
+.it-reader-btn:focus-visible,
+.it-sel-btn:focus-visible,
+.it-dict-btn:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+/* ─── Accessibility: Reduced Motion ──────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .immersive-translate-loading::after,
+  .it-loading-dots span,
+  .it-hover-block,
+  .it-bilingual-enter,
+  .it-replace-enter,
+  .it-original-tooltip,
+  .immersive-selection-tooltip,
+  #immersive-translate-onboarding,
+  .it-onboarding-card,
+  #immersive-translate-fab-menu,
+  .it-ob-dot {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  #immersive-translate-fab {
+    transition-duration: 0.01ms !important;
+  }
+  #immersive-translate-fab:hover {
+    transform: none;
+  }
 }

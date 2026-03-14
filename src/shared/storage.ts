@@ -17,8 +17,8 @@ export async function saveSettings(settings: UserSettings): Promise<void> {
   await browser.storage.local.set({ settings });
   
   if (settings.enableSync) {
-    await syncSettings(settings).catch(() => {
-      // Ignore sync errors (e.g., quota exceeded)
+    await syncSettings(settings).catch((err) => {
+      console.warn('[LinguaFlow] Settings sync failed (quota exceeded?):', err?.message);
     });
   }
 }

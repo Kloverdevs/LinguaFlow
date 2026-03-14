@@ -2,9 +2,12 @@ import { Readability } from '@mozilla/readability';
 import DOMPurify from 'dompurify';
 import { getSettings } from '@/shared/storage';
 import { logger } from '@/shared/logger';
+import { setTrustedHTML } from './safe-dom';
 
 let readerOverlay: HTMLElement | null = null;
 let originalBodyOverflow = '';
+let readerEscHandler: ((e: KeyboardEvent) => void) | null = null;
+let previousFocus: HTMLElement | null = null;
 
 /**
  * Initializes the reader mode if the user clicks the FAB action.
@@ -52,12 +55,12 @@ function renderReaderUI(title: string, byline: string, htmlContent: string) {
   
   const branding = document.createElement('div');
   branding.className = 'it-reader-branding';
-  branding.innerHTML = `
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  setTrustedHTML(branding, `
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
     </svg>
     LinguaFlow Reader
-  `;
+  `);
 
   const actions = document.createElement('div');
   actions.className = 'it-reader-actions';
@@ -75,7 +78,7 @@ function renderReaderUI(title: string, byline: string, htmlContent: string) {
     translateBtn.textContent = 'Translating...';
     // Let the main index.ts start the translation.
     // It will walk the DOM inside `readerOverlay` because it walks document.body
-    window.postMessage({ type: 'LINGUAFLOW_READER_TRANSLATE' }, '*');
+    window.postMessage({ type: 'LINGUAFLOW_READER_TRANSLATE' }, window.location.origin);
     setTimeout(() => { translateBtn.textContent = 'Translation Active'; }, 1000);
   };
 
@@ -111,7 +114,7 @@ function renderReaderUI(title: string, byline: string, htmlContent: string) {
   }
 
   const articleBody = document.createElement('div');
-  articleBody.innerHTML = htmlContent;
+  setTrustedHTML(articleBody, htmlContent);
   contentWrap.appendChild(articleBody);
 
   container.appendChild(contentWrap);
@@ -123,28 +126,41 @@ function renderReaderUI(title: string, byline: string, htmlContent: string) {
   originalBodyOverflow = document.body.style.overflow;
   document.body.style.overflow = 'hidden';
 
+  // Save previous focus for restoration
+  previousFocus = document.activeElement as HTMLElement;
+
   document.body.appendChild(readerOverlay);
 
-  // Close on Escape key
-  const escHandler = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') { closeReadingMode(); document.removeEventListener('keydown', escHandler); }
+  // Close on Escape key (stored for cleanup)
+  readerEscHandler = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') closeReadingMode();
   };
-  document.addEventListener('keydown', escHandler);
+  document.addEventListener('keydown', readerEscHandler);
 
-  // Animate in
+  // Animate in and move focus to close button
   requestAnimationFrame(() => {
     readerOverlay?.classList.add('it-show');
+    closeBtn.focus();
   });
 }
 
 function closeReadingMode() {
   if (!readerOverlay) return;
-  
+
+  // Clean up escape listener
+  if (readerEscHandler) {
+    document.removeEventListener('keydown', readerEscHandler);
+    readerEscHandler = null;
+  }
+
   readerOverlay.classList.remove('it-show');
-  
+
   setTimeout(() => {
     readerOverlay?.remove();
     readerOverlay = null;
     document.body.style.overflow = originalBodyOverflow;
+    // Restore focus to previously focused element
+    previousFocus?.focus();
+    previousFocus = null;
   }, 300);
 }

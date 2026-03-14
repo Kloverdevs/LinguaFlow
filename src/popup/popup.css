@@ -17,10 +17,10 @@
   --text-body: #334155;
   --text-secondary: #475569;
   --text-muted: #64748b;
-  --text-faint: #94a3b8;
+  --text-faint: #4b5563;
   --text-version: #cbd5e1;
   --text-input: #1e293b;
-  --text-select: #64748b;
+  --text-select: #4b5563;
   --border-main: #e2e8f0;
   --border-input: #cbd5e1;
   --border-light: #f1f5f9;
@@ -49,7 +49,7 @@
   --text-body: #e4e4e7;
   --text-secondary: #a1a1aa;
   --text-muted: #71717a;
-  --text-faint: #52525b;
+  --text-faint: #a1a1aa;
   --text-version: #3f3f46;
   --text-input: #f4f4f5;
   --text-select: #a1a1aa;
@@ -336,7 +336,7 @@ body:has(.engine-dropdown-menu) {
 .engine-free-tag {
   font-size: 9px;
   font-weight: 700;
-  color: #10b981;
+  color: #047857;
   background: #ecfdf5;
   padding: 1px 5px;
   border-radius: 3px;
@@ -858,3 +858,36 @@ body:has(.engine-dropdown-menu) {
 }
 .theme-btn:active { transform: scale(.95) }
 .theme-btn svg { transition: transform .3s ease }
+
+/* ── Accessibility: Focus Visible ───────────────────── */
+.btn-icon:focus-visible,
+.theme-btn:focus-visible,
+.back-btn:focus-visible,
+.cta:focus-visible,
+.toggle:focus-visible,
+.engine-dropdown-trigger:focus-visible,
+.engine-dropdown-item:focus-visible,
+.stepper-btn:focus-visible,
+.api-key-toggle:focus-visible,
+.cache-clear-btn:focus-visible,
+.footer-link:focus-visible,
+.warn-link:focus-visible,
+.it-onboarding-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Accessibility: Reduced Motion ──────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .popup, .spinner, .cta::after, .cta--loading,
+  .engine-dropdown-menu, .page, .engine-warn,
+  .it-onboarding-card {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .cta:hover, .lang-picker:hover, .engine-row:hover,
+  .btn-icon:active, .back-btn:active, .theme-btn:active {
+    transform: none !important;
+  }
+}

@@ -1,4 +1,5 @@
 import { saveSettings, getSettings } from '@/shared/storage';
+import { setTrustedHTML } from './safe-dom';
 
 let currentSlide = 0;
 let overlay: HTMLElement | null = null;
@@ -73,7 +74,7 @@ function renderSlide(): void {
   const card = overlay.querySelector('.it-onboarding-card') as HTMLElement;
   if (!card) return;
 
-  card.innerHTML = `
+  setTrustedHTML(card, `
     <div class="it-onboarding-header">
       ${slide.illustration}
     </div>
@@ -92,7 +93,7 @@ function renderSlide(): void {
         ${isLast ? 'Get Started' : 'Next'}
       </button>
     </div>
-  `;
+  `);
 
   // Bind buttons
   card.querySelector('[data-action="skip"]')?.addEventListener('click', dismiss);
@@ -126,10 +127,18 @@ export async function showOnboardingIfNeeded(): Promise<void> {
   currentSlide = 0;
   overlay = document.createElement('div');
   overlay.id = 'immersive-translate-onboarding';
-  overlay.innerHTML = `<div class="it-onboarding-card"></div>`;
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', 'LinguaFlow onboarding');
+  const card = document.createElement('div');
+  card.className = 'it-onboarding-card';
+  overlay.appendChild(card);
 
   document.body.appendChild(overlay);
   renderSlide();
+  // Focus first button for keyboard users
+  const firstBtn = card.querySelector('button') as HTMLElement;
+  firstBtn?.focus();
 
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) dismiss();

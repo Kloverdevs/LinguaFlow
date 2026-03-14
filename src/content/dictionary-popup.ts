@@ -3,9 +3,11 @@ import { sendToBackground } from '@/shared/message-bus';
 import { TranslationResult } from '@/types/translation';
 import { saveVocabEntry } from '@/shared/vocab-store';
 import { getActiveSiteRule } from '@/shared/site-rulesHelper';
+import { setTrustedHTML, clearElement } from './safe-dom';
 
 let popupElement: HTMLElement | null = null;
 let popupRequestId = 0;
+let popupAbortController: AbortController | null = null;
 
 export function setupDictionaryListener() {
   document.addEventListener('dblclick', async (e) => {
@@ -40,6 +42,8 @@ export function setupDictionaryListener() {
 
 async function showDictionaryPopup(text: string, x: number, y: number, sourceLang: string, targetLang: string, engine: any) {
   closePopup();
+  popupAbortController = new AbortController();
+  const signal = popupAbortController.signal;
   const requestId = ++popupRequestId;
 
   popupElement = document.createElement('div');
@@ -67,24 +71,28 @@ async function showDictionaryPopup(text: string, x: number, y: number, sourceLan
 
   const actionsDiv = document.createElement('div');
   actionsDiv.className = 'it-dictionary-actions';
-  actionsDiv.innerHTML = `
+  setTrustedHTML(actionsDiv, `
     <button class="it-dict-btn listen-btn" aria-label="Listen to pronunciation" title="Listen">
-      <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
       Listen
     </button>
     <button class="it-dict-btn save-btn" aria-label="Save to vocabulary" title="Save">
-      <svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15l-5-2.18L7 18V5h10v13z"/></svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15l-5-2.18L7 18V5h10v13z"/></svg>
       Save
     </button>
-  `;
+  `);
 
   popupElement.setAttribute('role', 'dialog');
+  popupElement.setAttribute('aria-modal', 'true');
   popupElement.setAttribute('aria-label', 'Dictionary popup');
+  popupElement.setAttribute('tabindex', '-1');
+  transDiv.setAttribute('aria-live', 'polite');
   popupElement.appendChild(headerDiv);
   popupElement.appendChild(transDiv);
   popupElement.appendChild(actionsDiv);
 
   document.body.appendChild(popupElement);
+  popupElement.focus();
 
   const listenBtn = popupElement.querySelector('.listen-btn') as HTMLElement;
   const saveBtn = popupElement.querySelector('.save-btn') as HTMLElement;
@@ -103,14 +111,14 @@ async function showDictionaryPopup(text: string, x: number, y: number, sourceLan
       transDiv.textContent = currentTranslation;
     } else {
       const errMsg = !response ? 'Translation failed' : (!response.success ? response.error : 'Translation failed');
-      transDiv.innerHTML = '';
+      clearElement(transDiv);
       const i = document.createElement('i');
       i.style.color = 'red';
       i.textContent = errMsg;
       transDiv.appendChild(i);
     }
   } catch (err) {
-    transDiv.innerHTML = '';
+    clearElement(transDiv);
     const i = document.createElement('i');
     i.style.color = 'red';
     i.textContent = 'Error connecting to service';
@@ -124,7 +132,7 @@ async function showDictionaryPopup(text: string, x: number, y: number, sourceLan
       if (sourceLang !== 'auto') utterance.lang = sourceLang;
       window.speechSynthesis.speak(utterance);
     }
-  });
+  }, { signal });
 
   saveBtn.addEventListener('click', async () => {
     if (!currentTranslation) return;
@@ -143,10 +151,12 @@ async function showDictionaryPopup(text: string, x: number, y: number, sourceLan
     } catch (e) {
       saveBtn.textContent = 'Error';
     }
-  });
+  }, { signal });
 }
 
 function closePopup() {
+  popupAbortController?.abort();
+  popupAbortController = null;
   if (popupElement) {
     popupElement.remove();
     popupElement = null;

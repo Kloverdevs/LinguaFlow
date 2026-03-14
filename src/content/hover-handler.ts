@@ -3,6 +3,7 @@ import { TranslationResult } from '@/types/translation';
 import { MessageResponse } from '@/types/messages';
 import { isSubstantiveText } from './content-detector';
 import { isPdfPage } from './pdf-handler';
+import { createLoadingDots } from './safe-dom';
 
 const DEBOUNCE_MS = 300;
 
@@ -207,7 +208,7 @@ function handleMouseEnter(e: MouseEvent): void {
     if (isInlineEl) block.classList.add('it-inline-block');
     block.setAttribute('data-immersive-block', 'true');
     block.setAttribute('data-immersive-hover-block', 'true');
-    block.innerHTML = '<span class="it-loading-dots"><span></span><span></span><span></span></span>';
+    block.appendChild(createLoadingDots());
     el.parentNode?.insertBefore(block, el.nextSibling);
     activeHoverBlock = block;
 

@@ -32,30 +32,21 @@ async function buildManifest() {
       };
     }
     
-    // Firefox requires a Gecko ID, explicit versioning, and mandatory Data Collection scopes natively
-    // Firefox requires a Gecko ID, explicit versioning, and mandatory Data Collection scopes natively
-    // Firefox requires a Gecko ID, explicit versioning, and mandatory Data Collection scopes natively
     manifest.browser_specific_settings = {
       gecko: {
-        id: "linguaflow@kloverdevs.com"
+        id: "linguaflow@kloverdevs.com",
+        strict_min_version: "142.0",
+        data_collection_permissions: {
+          required: [
+            "websiteContent",
+            "browsingActivity"
+          ]
+        }
       }
     };
-    // Force modern Mozilla background type compatibility while preventing validation warnings
     if(manifest.background) {
          manifest.background.type = "module";
     }
-
-    // Explicitly declare Data Collection payload for reviewers using the Mozilla Object schema
-    if (!manifest.browser_specific_settings.gecko) manifest.browser_specific_settings.gecko = {};
-    manifest.browser_specific_settings.gecko.strict_min_version = "109.0";
-    
-    // Explicitly declare Data Collection payload for reviewers
-    manifest.browser_specific_settings.gecko.data_collection_permissions = {
-        required: [
-            "websiteContent",
-            "browsingActivity"
-        ]
-    };
   } else {
     // Chrome / Edge / Brave defaults remain untouched
     // Note: The base manifest in /public already uses `service_worker`

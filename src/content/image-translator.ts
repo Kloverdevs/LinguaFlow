@@ -6,6 +6,7 @@ import { createWorker, PSM } from 'tesseract.js';
 import { ENGINES } from '@/constants/engines';
 import { TranslationEngine } from '@/types/translation';
 import './image-translator.css';
+import { setTrustedHTML, clearElement, createSpinnerWithMessage } from './safe-dom';
 
 // Map our language codes to Tesseract codes
 function mapLangToTesseract(lang: string): string {
@@ -64,23 +65,27 @@ export async function showImageTranslationModal(srcUrl: string, initialSourceLan
   
   const modal = document.createElement('div');
   modal.className = 'it-image-modal';
-  
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-label', 'Image translation');
+
   const optionsHtml = LANGUAGES.map(l => `<option value="${l.code}">${l.name}</option>`).join('');
   
   // Create engine options logic. Show name. 
   const engineOptionsHtml = ENGINES.map(e => `<option value="${e.id}">${e.name}${!e.requiresKey ? ' (Free)' : ''}</option>`).join('');
   
-  modal.innerHTML = `
+  const targetOptionsHtml = optionsHtml.replace('<option value="auto">Auto Detect</option>', '');
+  setTrustedHTML(modal, `
     <div class="it-image-header">
       <div class="it-image-toolbar">
-        <select class="it-lang-select it-engine-select" title="Translation Engine">${engineOptionsHtml}</select>
+        <select class="it-lang-select it-engine-select" title="Translation Engine" aria-label="Translation Engine">${engineOptionsHtml}</select>
         <div class="it-toolbar-divider"></div>
-        <select class="it-lang-select it-source-lang" title="Source Language">${optionsHtml}</select>
-        <span class="it-lang-arrow">→</span>
-        <select class="it-lang-select it-target-lang" title="Target Language">${optionsHtml.replace('<option value="auto">Auto Detect</option>', '')}</select>
+        <select class="it-lang-select it-source-lang" title="Source Language" aria-label="Source Language">${optionsHtml}</select>
+        <span class="it-lang-arrow">\u2192</span>
+        <select class="it-lang-select it-target-lang" title="Target Language" aria-label="Target Language">${targetOptionsHtml}</select>
         <button class="it-retranslate-btn">Translate</button>
       </div>
-      <button class="it-image-close" title="Close">×</button>
+      <button class="it-image-close" title="Close" aria-label="Close">\u00d7</button>
     </div>
     <div class="it-image-content">
       <div class="it-image-container">
@@ -89,7 +94,7 @@ export async function showImageTranslationModal(srcUrl: string, initialSourceLan
       <div class="it-image-text">
         <div class="it-text-source">
           <div class="it-text-label">Extracted Text <span style="opacity:0.6;font-size:12px;font-weight:normal">(Editable)</span></div>
-          <textarea class="it-source-textarea" placeholder="Recognized text will appear here..."></textarea>
+          <textarea class="it-source-textarea" placeholder="Recognized text will appear here..." aria-label="Extracted text"></textarea>
         </div>
         <div class="it-text-target">
           <div class="it-text-label">Translation</div>
@@ -99,7 +104,7 @@ export async function showImageTranslationModal(srcUrl: string, initialSourceLan
         </div>
       </div>
     </div>
-  `;
+  `);
   
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
@@ -112,7 +117,8 @@ export async function showImageTranslationModal(srcUrl: string, initialSourceLan
   const sourceTextarea = modal.querySelector('.it-source-textarea') as HTMLTextAreaElement;
   const resultContainer = modal.querySelector('.it-image-result-container') as HTMLElement;
 
-  closeBtn.onclick = () => document.body.removeChild(overlay);
+  closeBtn.onclick = () => overlay.remove();
+  closeBtn.focus();
   
   // Set initial select values
   if (LANGUAGES.some(l => l.code === initialSourceLang)) sourceSelect.value = initialSourceLang;
@@ -146,7 +152,8 @@ export async function showImageTranslationModal(srcUrl: string, initialSourceLan
     const executeTranslation = async () => {
       if (isTranslating) return;
       isTranslating = true;
-      resultContainer.innerHTML = '<div class="it-spinner"></div><p>Translating image...</p>';
+      clearElement(resultContainer);
+      resultContainer.appendChild(createSpinnerWithMessage('Translating image...'));
       retranslateBtn.disabled = true;
       const sLang = sourceSelect.value;
       const tLang = targetSelect.value;
@@ -156,14 +163,15 @@ export async function showImageTranslationModal(srcUrl: string, initialSourceLan
         // If we already manually OCR'd it (or user edited it), just translate the text
         if (cachedExtractedText) {
           sourceTextarea.value = cachedExtractedText; // ensure UI matches
-          resultContainer.innerHTML = '<div class="it-spinner"></div><p>Translating extracted text...</p>';
+          clearElement(resultContainer);
+          resultContainer.appendChild(createSpinnerWithMessage('Translating extracted text...'));
           const textResp = await sendToBackground<any>({
             type: 'TRANSLATE_REQUEST',
             payload: { texts: [cachedExtractedText], sourceLang: sLang, targetLang: tLang, engine }
           }) as MessageResponse<any>;
           
           if (textResp.success && textResp.data.translatedTexts.length > 0) {
-            resultContainer.innerHTML = '';
+            clearElement(resultContainer);
             const resDiv = document.createElement('div');
             resDiv.className = 'it-image-result';
             resDiv.style.whiteSpace = 'pre-wrap';
@@ -184,7 +192,8 @@ export async function showImageTranslationModal(srcUrl: string, initialSourceLan
 
         if (!response.success && response.error === 'NO_VISION_API_AVAILABLE') {
           // Fallback to local offline OCR
-          resultContainer.innerHTML = '<div class="it-spinner"></div><p>Running local offline OCR...</p>';
+          clearElement(resultContainer);
+          resultContainer.appendChild(createSpinnerWithMessage('Running local offline OCR...'));
           sourceTextarea.value = 'Running local offline OCR...';
           
           const tessLang = mapLangToTesseract(sLang);
@@ -216,7 +225,8 @@ export async function showImageTranslationModal(srcUrl: string, initialSourceLan
           }
 
           // Translate the newly extracted text
-          resultContainer.innerHTML = '<div class="it-spinner"></div><p>Translating extracted text...</p>';
+          clearElement(resultContainer);
+          resultContainer.appendChild(createSpinnerWithMessage('Translating extracted text...'));
           const textResp = await sendToBackground<any>({
             type: 'TRANSLATE_REQUEST',
             payload: { texts: [cachedExtractedText], sourceLang: sLang, targetLang: tLang, engine }
@@ -233,21 +243,21 @@ export async function showImageTranslationModal(srcUrl: string, initialSourceLan
         }
 
         if (response.success) {
-          resultContainer.innerHTML = '';
+          clearElement(resultContainer);
           const resDiv = document.createElement('div');
           resDiv.className = 'it-image-result';
           resDiv.style.whiteSpace = 'pre-wrap';
           resDiv.textContent = response.data || 'No text found';
           resultContainer.appendChild(resDiv);
         } else {
-          resultContainer.innerHTML = '';
+          clearElement(resultContainer);
           const errP = document.createElement('p');
           errP.style.color = '#ef4444';
           errP.textContent = `Error: ${response.error || 'Failed to translate image'}`;
           resultContainer.appendChild(errP);
         }
       } catch (err) {
-        resultContainer.innerHTML = '';
+        clearElement(resultContainer);
         const errP = document.createElement('p');
         errP.style.color = '#ef4444';
         errP.textContent = `Error: ${(err as Error).message}`;
@@ -285,7 +295,7 @@ export async function showImageTranslationModal(srcUrl: string, initialSourceLan
   } catch (err) {
     const fallbackContainer = modal.querySelector('.it-image-result-container') || modal.querySelector('.it-image-text');
     if (fallbackContainer) {
-      fallbackContainer.innerHTML = '';
+      clearElement(fallbackContainer as HTMLElement);
       const errP = document.createElement('p');
       errP.style.color = '#ef4444';
       errP.textContent = `Error: ${(err as Error).message}`;

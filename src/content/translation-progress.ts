@@ -1,5 +1,6 @@
 import { getStrings } from '@/shared/i18n';
 import { getSettings } from '@/shared/storage';
+import { setTrustedHTML } from './safe-dom';
 
 let progressContainer: HTMLElement | null = null;
 let progressBar: HTMLElement | null = null;
@@ -13,18 +14,29 @@ export async function initProgressIndicator() {
 
   progressContainer = document.createElement('div');
   progressContainer.className = 'it-progress-container';
-  progressContainer.innerHTML = `
-    <div class="it-progress-text">${t.translating || 'Translating...'}</div>
-    <div class="it-progress-track">
-      <div class="it-progress-bar"></div>
-    </div>
-  `;
+  progressContainer.setAttribute('role', 'status');
+  progressContainer.setAttribute('aria-live', 'polite');
+  const progressTextDiv = document.createElement('div');
+  progressTextDiv.className = 'it-progress-text';
+  progressTextDiv.textContent = t.translating || 'Translating...';
+  const progressTrack = document.createElement('div');
+  progressTrack.className = 'it-progress-track';
+  const progressBarDiv = document.createElement('div');
+  progressBarDiv.className = 'it-progress-bar';
+  progressTrack.appendChild(progressBarDiv);
+  progressContainer.appendChild(progressTextDiv);
+  progressContainer.appendChild(progressTrack);
 
   progressText = progressContainer.querySelector('.it-progress-text');
   progressBar = progressContainer.querySelector('.it-progress-bar');
 
-  // Add styles via JS to avoid needing a separate CSS file for just this, or we can add it to content.css later
+  // Add styles via JS — guard against duplicates if re-initialized
+  if (document.getElementById('it-progress-styles')) {
+    document.body.appendChild(progressContainer);
+    return;
+  }
   const style = document.createElement('style');
+  style.id = 'it-progress-styles';
   style.textContent = `
     .it-progress-container {
       position: fixed;

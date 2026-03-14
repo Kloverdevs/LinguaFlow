@@ -54,6 +54,7 @@ export function updateLiveCaptionsLanguage(lang: string) {
 function setupCaptionObserver(container: Element) {
   if (observer) {
     observer.disconnect();
+    if (scanTimeout) { clearTimeout(scanTimeout); scanTimeout = null; }
   }
 
   observer = new MutationObserver((mutations) => {
@@ -80,10 +81,11 @@ function setupCaptionObserver(container: Element) {
   observer.observe(container, { childList: true, subtree: true, characterData: true });
 }
 
-let scanTimeout: number | null = null;
+let scanTimeout: ReturnType<typeof setTimeout> | null = null;
 function debounceScan(container: Element) {
   if (scanTimeout) clearTimeout(scanTimeout);
-  scanTimeout = window.setTimeout(() => {
+  scanTimeout = setTimeout(() => {
+    scanTimeout = null;
     const spans = container.querySelectorAll(textSpanSelector);
     spans.forEach(checkAndTranslateElement);
   }, 200);
