@@ -4,19 +4,22 @@ import { sendToBackground } from '@/shared/message-bus';
 import { TranslationResult } from '@/types/translation';
 
 let observer: MutationObserver | null = null;
+let bodyObserver: MutationObserver | null = null;
 let currentLanguage = 'en';
 
 export async function initVideoSubtitles() {
   if (!window.location.hostname.includes('youtube.com')) return;
-  
+
   const settings = await getSettings();
   currentLanguage = settings.targetLang;
-  
+
   logger.info('Initializing YouTube Dual Subtitles');
 
-  const bodyObserver = new MutationObserver(() => {
+  bodyObserver = new MutationObserver(() => {
     const captionContainer = document.querySelector('.ytp-caption-window-container');
     if (captionContainer && !observer) {
+      bodyObserver?.disconnect();
+      bodyObserver = null;
       setupCaptionObserver(captionContainer);
     }
   });

@@ -7,6 +7,7 @@ import { TARGET_LANGUAGES } from '@/constants/languages';
 
 let popupElement: HTMLElement | null = null;
 let currentSettings: any = null;
+let activeDragCleanup: (() => void) | null = null;
 
 // Keep settings in sync so popup always uses the latest target language
 onSettingsChanged((newSettings) => {
@@ -139,10 +140,15 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
         if (header) header.style.cursor = 'grab';
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
+        activeDragCleanup = null;
       };
 
       document.addEventListener('mousemove', onMouseMove);
       document.addEventListener('mouseup', onMouseUp);
+      activeDragCleanup = () => {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      };
     });
   }
 
@@ -359,6 +365,8 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
 }
 
 export function closeSelectionPopup() {
+  activeDragCleanup?.();
+  activeDragCleanup = null;
   if (popupElement) {
     popupElement.remove();
     popupElement = null;

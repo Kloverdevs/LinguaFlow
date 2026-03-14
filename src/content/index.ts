@@ -129,7 +129,7 @@ document.addEventListener('contextmenu', (e) => {
   setupDictionaryListener();
 
   // Listen for settings changes
-  onSettingsChanged((newSettings) => {
+  const unsubSettings = onSettingsChanged((newSettings) => {
     const prevHoverMode = currentSettings?.hoverMode;
     const prevLocale = currentSettings?.uiLocale;
     const prevFabSize = currentSettings?.fabSize;
@@ -168,6 +168,9 @@ document.addEventListener('contextmenu', (e) => {
 
     applyTranslationStyles(currentSettings);
   });
+
+  // Cleanup settings listener on page unload
+  window.addEventListener('beforeunload', () => unsubSettings?.(), { once: true });
 
   // Enable hover on load if hoverMode is already enabled
   if (currentSettings.hoverMode && !isPdfPage()) {

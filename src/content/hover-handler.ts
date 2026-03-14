@@ -216,14 +216,20 @@ function handleMouseEnter(e: MouseEvent): void {
     pendingAbort = abort;
 
     try {
-      const response = await sendToBackground<TranslationResult>({
-        type: 'TRANSLATE_REQUEST',
-        payload: {
-          texts: [originalText],
-          sourceLang: 'auto',
-          targetLang,
-        },
-      }) as MessageResponse<TranslationResult>;
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Hover translation timeout')), 8000)
+      );
+      const response = await Promise.race([
+        sendToBackground<TranslationResult>({
+          type: 'TRANSLATE_REQUEST',
+          payload: {
+            texts: [originalText],
+            sourceLang: 'auto',
+            targetLang,
+          },
+        }),
+        timeout,
+      ]) as MessageResponse<TranslationResult>;
 
       // Check if this request was cancelled while waiting
       if (abort.signal.aborted) return;
@@ -253,6 +259,10 @@ function handleMouseEnter(e: MouseEvent): void {
       block.classList.add('it-error');
       block.textContent = 'Translation failed';
       console.error('[LinguaFlow] Hover translate error:', (err as Error).message);
+    } finally {
+      if (pendingAbort === abort) {
+        pendingAbort = null;
+      }
     }
   }, DEBOUNCE_MS);
 }

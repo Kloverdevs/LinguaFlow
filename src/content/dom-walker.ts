@@ -227,7 +227,11 @@ export async function walkDOMAsync(
 
     // Flush the chunk via callback if it reaches our threshold
     if (chunk.length >= CHUNK_SIZE) {
-      if (onNodesFound) onNodesFound([...chunk]);
+      try {
+        if (onNodesFound) onNodesFound([...chunk]);
+      } catch (err) {
+        // Don't let a callback error stop the DOM walk
+      }
       nodes.push(...chunk);
       chunk.length = 0;
     }
@@ -237,7 +241,11 @@ export async function walkDOMAsync(
 
   // Flush any remaining nodes
   if (chunk.length > 0) {
-    if (onNodesFound) onNodesFound([...chunk]);
+    try {
+      if (onNodesFound) onNodesFound([...chunk]);
+    } catch (err) {
+      // Don't let a callback error lose the remaining nodes
+    }
     nodes.push(...chunk);
   }
 

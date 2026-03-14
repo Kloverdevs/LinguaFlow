@@ -4,6 +4,7 @@ import { sendToBackground } from '@/shared/message-bus';
 import { TranslationResult } from '@/types/translation';
 
 let observer: MutationObserver | null = null;
+let bodyObserver: MutationObserver | null = null;
 let currentLanguage = 'en';
 let captionContainerSelector = '';
 let textSpanSelector = '';
@@ -34,9 +35,11 @@ export async function initLiveCaptions() {
 
   logger.info(`Initializing Live Captions for ${hostname}`);
 
-  const bodyObserver = new MutationObserver(() => {
+  bodyObserver = new MutationObserver(() => {
     const captionContainer = document.querySelector(captionContainerSelector);
     if (captionContainer && !observer) {
+      bodyObserver?.disconnect();
+      bodyObserver = null;
       setupCaptionObserver(captionContainer);
     }
   });
