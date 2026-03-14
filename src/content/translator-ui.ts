@@ -5,6 +5,14 @@ let currentMode: DisplayMode = 'replace';
 let ttsEnabled = true;
 let dyslexiaFontEnabled = false;
 
+/** Safely parse an HTML string into child nodes for restoration.
+ *  Uses a detached div so parsed nodes never enter the live document until cloned. */
+function parseHTMLNodes(html: string): NodeList {
+  const container = document.createElement('div');
+  container.innerHTML = html;
+  return container.childNodes;
+}
+
 export function setDisplayMode(mode: DisplayMode): void {
   currentMode = mode;
 }
@@ -191,13 +199,10 @@ export function replaceLoading(
     // Store original text for hover tooltip
     const originalText = loader.getAttribute('data-immersive-original-html');
     if (originalText) {
-      // Safely parse the HTML without creating live executable elements
-      try {
-        const doc = new DOMParser().parseFromString(originalText, 'text/html');
-        loader.setAttribute('data-immersive-original-text', doc.body.textContent ?? '');
-      } catch (e) {
-        loader.setAttribute('data-immersive-original-text', '');
-      }
+      // Safely extract text content from HTML
+      const tpl = document.createElement('template');
+      tpl.innerHTML = originalText;
+      loader.setAttribute('data-immersive-original-text', tpl.content.textContent ?? '');
     }
 
     // If element has interactive children (links, buttons), preserve them
@@ -238,9 +243,8 @@ export function showError(loader: HTMLElement, error: string): void {
     loader.removeAttribute('data-immersive-translated');
     const originalHTML = loader.getAttribute('data-immersive-original-html');
     if (originalHTML !== null) {
-      const doc = new DOMParser().parseFromString(originalHTML, 'text/html');
       loader.textContent = '';
-      for (const child of Array.from(doc.body.childNodes)) {
+      for (const child of Array.from(parseHTMLNodes(originalHTML))) {
         loader.appendChild(child.cloneNode(true));
       }
     }
@@ -284,9 +288,8 @@ export function removeAllTranslations(): void {
     const originalLang = htmlEl.getAttribute('data-immersive-original-lang');
 
     if (originalHTML !== null) {
-      const doc = new DOMParser().parseFromString(originalHTML, 'text/html');
       htmlEl.textContent = '';
-      for (const child of Array.from(doc.body.childNodes)) {
+      for (const child of Array.from(parseHTMLNodes(originalHTML))) {
         htmlEl.appendChild(child.cloneNode(true));
       }
     }

@@ -18,20 +18,21 @@ interface CachedTranslation {
   accessedAt: number;
 }
 
-function generateKey(
+/* ─── In-memory fallback when IndexedDB is unavailable (private browsing) ─── */
+const memoryCache = new Map<string, CachedTranslation>();
+let useMemoryFallback = false;
+
+async function generateKey(
   text: string,
   sourceLang: string,
   targetLang: string,
   engine: TranslationEngine
-): string {
-  // Simple hash using FNV-1a for speed
+): Promise<string> {
   const input = `${engine}:${sourceLang}:${targetLang}:${text.trim().toLowerCase()}`;
-  let hash = 2166136261;
-  for (let i = 0; i < input.length; i++) {
-    hash ^= input.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return (hash >>> 0).toString(36);
+  const encoded = new TextEncoder().encode(input);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', encoded);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 function openDB(): Promise<IDBDatabase> {
@@ -52,15 +53,48 @@ function openDB(): Promise<IDBDatabase> {
   });
 }
 
+/* ─── Memory fallback helpers ─── */
+function memoryGet(key: string): CachedTranslation | undefined {
+  const entry = memoryCache.get(key);
+  if (!entry) return undefined;
+  if (Date.now() - entry.createdAt > TTL_MS) {
+    memoryCache.delete(key);
+    return undefined;
+  }
+  entry.accessedAt = Date.now();
+  return entry;
+}
+
+function memoryPut(entry: CachedTranslation): void {
+  memoryCache.set(entry.key, entry);
+  if (memoryCache.size > MAX_ENTRIES) {
+    // Evict oldest by accessedAt
+    let oldestKey = '';
+    let oldestTime = Infinity;
+    for (const [k, v] of memoryCache) {
+      if (v.accessedAt < oldestTime) {
+        oldestTime = v.accessedAt;
+        oldestKey = k;
+      }
+    }
+    if (oldestKey) memoryCache.delete(oldestKey);
+  }
+}
+
 export async function getCached(
   text: string,
   sourceLang: string,
   targetLang: string,
   engine: TranslationEngine
 ): Promise<string | null> {
+  const key = await generateKey(text, sourceLang, targetLang, engine);
+
+  if (useMemoryFallback) {
+    return memoryGet(key)?.translatedText ?? null;
+  }
+
   try {
     const db = await openDB();
-    const key = generateKey(text, sourceLang, targetLang, engine);
     const tx = db.transaction(STORE_NAME, 'readwrite');
     const store = tx.objectStore(STORE_NAME);
 
@@ -86,7 +120,8 @@ export async function getCached(
       request.onerror = () => resolve(null);
     });
   } catch {
-    return null;
+    useMemoryFallback = true;
+    return memoryGet(key)?.translatedText ?? null;
   }
 }
 
@@ -97,22 +132,27 @@ export async function putCached(
   targetLang: string,
   engine: TranslationEngine
 ): Promise<void> {
+  const key = await generateKey(text, sourceLang, targetLang, engine);
+  const entry: CachedTranslation = {
+    key,
+    originalText: text,
+    translatedText,
+    sourceLang,
+    targetLang,
+    engine,
+    createdAt: Date.now(),
+    accessedAt: Date.now(),
+  };
+
+  if (useMemoryFallback) {
+    memoryPut(entry);
+    return;
+  }
+
   try {
     const db = await openDB();
-    const key = generateKey(text, sourceLang, targetLang, engine);
     const tx = db.transaction(STORE_NAME, 'readwrite');
     const store = tx.objectStore(STORE_NAME);
-
-    const entry: CachedTranslation = {
-      key,
-      originalText: text,
-      translatedText,
-      sourceLang,
-      targetLang,
-      engine,
-      createdAt: Date.now(),
-      accessedAt: Date.now(),
-    };
 
     store.put(entry);
 
@@ -124,7 +164,9 @@ export async function putCached(
       }
     };
   } catch (err) {
-    logger.error('Cache put failed:', err);
+    logger.error('Cache put failed, switching to memory fallback:', err);
+    useMemoryFallback = true;
+    memoryPut(entry);
   }
 }
 
@@ -144,12 +186,19 @@ function evictOldest(store: IDBObjectStore, count: number): void {
 }
 
 export async function clearCache(): Promise<void> {
+  if (useMemoryFallback) {
+    memoryCache.clear();
+    return;
+  }
   const db = await openDB();
   const tx = db.transaction(STORE_NAME, 'readwrite');
   tx.objectStore(STORE_NAME).clear();
 }
 
 export async function getCacheStats(): Promise<{ count: number }> {
+  if (useMemoryFallback) {
+    return { count: memoryCache.size };
+  }
   try {
     const db = await openDB();
     const tx = db.transaction(STORE_NAME, 'readonly');
@@ -160,6 +209,6 @@ export async function getCacheStats(): Promise<{ count: number }> {
       req.onerror = () => resolve({ count: 0 });
     });
   } catch {
-    return { count: 0 };
+    return { count: memoryCache.size };
   }
 }

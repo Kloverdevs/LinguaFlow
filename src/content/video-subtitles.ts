@@ -7,6 +7,11 @@ let observer: MutationObserver | null = null;
 let bodyObserver: MutationObserver | null = null;
 let currentLanguage = 'en';
 
+// Batching state — collect lines over a short window then translate together
+let pendingLines: { line: Element; text: string; transDiv: HTMLElement }[] = [];
+let batchTimer: ReturnType<typeof setTimeout> | null = null;
+const BATCH_DELAY = 100; // ms to wait before flushing batch
+
 export async function initVideoSubtitles() {
   if (!window.location.hostname.includes('youtube.com')) return;
 
@@ -34,23 +39,21 @@ function setupCaptionObserver(container: Element) {
   if (observer) {
     observer.disconnect();
   }
-  
+
   observer = new MutationObserver(() => {
     processCaptions(container);
   });
-  
+
   // YouTube recreates windows and visual lines very often
   observer.observe(container, { childList: true, subtree: true, characterData: true });
 }
 
-async function processCaptions(container: Element) {
+function processCaptions(container: Element) {
   // Use a tiny delay to allow YouTube to finish building the line
   setTimeout(() => {
     const lines = container.querySelectorAll('.caption-visual-line');
-    
-    lines.forEach(async (line) => {
-      // If we already added a translation container, update it if needed 
-      // but to be safe, if we've processed this exact DOM node, skip unless text changed
+
+    lines.forEach((line) => {
       const originalText = getOriginalText(line);
       if (!originalText) return;
 
@@ -67,38 +70,62 @@ async function processCaptions(container: Element) {
         transDiv.className = 'it-yt-translation it-loading';
         line.appendChild(transDiv);
       }
-      
+
       transDiv.setAttribute('data-original', originalText);
       transDiv.textContent = '...';
 
-      try {
-        const resp = await sendToBackground<TranslationResult>({
-          type: 'TRANSLATE_REQUEST',
-          payload: { texts: [originalText], sourceLang: 'auto', targetLang: currentLanguage },
-        });
+      // Add to batch instead of translating immediately
+      pendingLines.push({ line, text: originalText, transDiv });
+    });
 
+    // Schedule batch flush
+    if (pendingLines.length > 0 && !batchTimer) {
+      batchTimer = setTimeout(flushBatch, BATCH_DELAY);
+    }
+  }, 50);
+}
+
+async function flushBatch() {
+  batchTimer = null;
+  if (pendingLines.length === 0) return;
+
+  const batch = pendingLines.splice(0);
+  const texts = batch.map((b) => b.text);
+
+  try {
+    const resp = await sendToBackground<TranslationResult>({
+      type: 'TRANSLATE_REQUEST',
+      payload: { texts, sourceLang: 'auto', targetLang: currentLanguage },
+    });
+
+    if (resp && resp.success && resp.data.translatedTexts.length === batch.length) {
+      batch.forEach((item, i) => {
         // Ensure the text hasn't changed again before we got the response
-        if (transDiv.getAttribute('data-original') !== originalText) return;
-
-        if (resp && resp.success && resp.data.translatedTexts.length > 0) {
-          transDiv.textContent = resp.data.translatedTexts[0];
-          transDiv.classList.remove('it-loading');
-        } else {
-          transDiv.remove();
+        if (item.transDiv.getAttribute('data-original') !== item.text) return;
+        item.transDiv.textContent = resp.data.translatedTexts[i];
+        item.transDiv.classList.remove('it-loading');
+      });
+    } else {
+      // Remove loading indicators on failure
+      batch.forEach((item) => {
+        if (item.transDiv.getAttribute('data-original') === item.text) {
+          item.transDiv.remove();
         }
-      } catch (e) {
-        if (transDiv.getAttribute('data-original') === originalText) {
-          transDiv.remove();
-        }
+      });
+    }
+  } catch {
+    batch.forEach((item) => {
+      if (item.transDiv.getAttribute('data-original') === item.text) {
+        item.transDiv.remove();
       }
     });
-  }, 50);
+  }
 }
 
 function getOriginalText(lineElement: Element): string {
   // YouTube caption lines usually contain .ytp-caption-segment elements
   const segments = Array.from(lineElement.querySelectorAll('.ytp-caption-segment'));
   if (segments.length === 0) return '';
-  
+
   return segments.map(s => s.textContent || '').join(' ').replace(/\s+/g, ' ').trim();
 }
