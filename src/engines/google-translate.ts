@@ -1,4 +1,5 @@
 import { BaseTranslationEngine } from './base-engine';
+import { logger } from '@/shared/logger';
 
 export class GoogleTranslateEngine extends BaseTranslationEngine {
   getMaxBatchSize(): number {
@@ -62,7 +63,7 @@ export class GoogleTranslateEngine extends BaseTranslationEngine {
           const translatedArray = translatedFull.split('\n\n');
           
           if (translatedArray.length !== batch.length) {
-            console.warn('[LinguaFlow] Google Translate swallowed batch delimiters. Returning original batch.');
+            logger.warn('Google Translate swallowed batch delimiters. Returning original batch.');
             return batch;
           }
           

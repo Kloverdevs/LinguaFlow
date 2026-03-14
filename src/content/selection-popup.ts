@@ -1,13 +1,19 @@
 import { getSettings, onSettingsChanged } from '@/shared/storage';
 import { sendToBackground } from '@/shared/message-bus';
 import { TranslationResult } from '@/types/translation';
+import { UserSettings } from '@/types/settings';
 import { saveVocabEntry } from '@/shared/vocab-store';
 import { getActiveSiteRule } from '@/shared/site-rulesHelper';
 import { TARGET_LANGUAGES } from '@/constants/languages';
 import { setTrustedHTML, clearElement, createStatusSpan } from './safe-dom';
 
+/** Delay before resetting copy button text after successful/failed copy */
+const COPY_FEEDBACK_MS = 2000;
+/** Delay before attaching outside-click close handler (prevents instant close) */
+const CLOSE_HANDLER_DELAY_MS = 100;
+
 let popupElement: HTMLElement | null = null;
-let currentSettings: any = null;
+let currentSettings: UserSettings | null = null;
 let activeDragCleanup: (() => void) | null = null;
 let activeCloseHandler: ((e: MouseEvent) => void) | null = null;
 let closeHandlerTimer: ReturnType<typeof setTimeout> | null = null;
@@ -369,10 +375,10 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
     try {
       await navigator.clipboard.writeText(currentTranslation);
       copyBtn.textContent = 'Copied';
-      setTimeout(() => { copyBtn.textContent = 'Copy'; }, 2000);
+      setTimeout(() => { copyBtn.textContent = 'Copy'; }, COPY_FEEDBACK_MS);
     } catch {
       copyBtn.textContent = 'Failed';
-      setTimeout(() => { copyBtn.textContent = 'Copy'; }, 2000);
+      setTimeout(() => { copyBtn.textContent = 'Copy'; }, COPY_FEEDBACK_MS);
     }
   });
 
@@ -423,7 +429,7 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
   closeHandlerTimer = setTimeout(() => {
     if (activeCloseHandler) document.addEventListener('mousedown', activeCloseHandler);
     closeHandlerTimer = null;
-  }, 100);
+  }, CLOSE_HANDLER_DELAY_MS);
 
   activeEscapeHandler = (e: KeyboardEvent) => {
     if (e.key === 'Escape') { closeSelectionPopup(); }

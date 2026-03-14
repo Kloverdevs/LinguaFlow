@@ -29,6 +29,21 @@ export async function initVideoSubtitles() {
     }
   });
   bodyObserver.observe(document.body, { childList: true, subtree: true });
+
+  // Clean up observers on page unload to prevent leaks
+  window.addEventListener('beforeunload', cleanupVideoSubtitles, { once: true });
+}
+
+export function cleanupVideoSubtitles(): void {
+  observer?.disconnect();
+  observer = null;
+  bodyObserver?.disconnect();
+  bodyObserver = null;
+  if (batchTimer) {
+    clearTimeout(batchTimer);
+    batchTimer = null;
+  }
+  pendingLines.length = 0;
 }
 
 export function updateVideoSubtitleLanguage(lang: string) {

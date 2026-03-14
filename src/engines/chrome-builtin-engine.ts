@@ -1,5 +1,6 @@
 import browser from 'webextension-polyfill';
 import { BaseTranslationEngine } from './base-engine';
+import { MessageResponse } from '@/types/messages';
 import { logger } from '@/shared/logger';
 
 // Type definitions for the experimental Chrome translation API
@@ -35,11 +36,11 @@ export class ChromeBuiltinEngine extends BaseTranslationEngine {
       const response = await browser.tabs.sendMessage(this.config.tabId, {
         type: 'EXECUTE_CHROME_BUILTIN',
         payload: { texts, sourceLang, targetLang }
-      });
-      if (response && !(response as any).success) {
-        throw new Error((response as any).error);
+      }) as MessageResponse<string[]> | undefined;
+      if (response && !response.success) {
+        throw new Error(response.error);
       }
-      return response ? (response as any).data : texts.map(() => 'Error routing offline translation to page context.');
+      return response && response.success ? response.data : texts.map(() => 'Error routing offline translation to page context.');
     }
     
     throw new Error('Chrome Built-in engine cannot run in this context without a target tab.');

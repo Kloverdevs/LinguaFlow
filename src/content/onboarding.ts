@@ -1,6 +1,9 @@
 import { saveSettings, getSettings } from '@/shared/storage';
 import { setTrustedHTML } from './safe-dom';
 
+/** Duration of dismiss animation before removing overlay */
+const DISMISS_ANIMATION_MS = 250;
+
 let currentSlide = 0;
 let overlay: HTMLElement | null = null;
 
@@ -117,7 +120,7 @@ async function dismiss(): Promise<void> {
     currentSlide = 0;
     const current = await getSettings();
     await saveSettings({ ...current, onboardingCompleted: true });
-  }, 250);
+  }, DISMISS_ANIMATION_MS);
 }
 
 export async function showOnboardingIfNeeded(): Promise<void> {

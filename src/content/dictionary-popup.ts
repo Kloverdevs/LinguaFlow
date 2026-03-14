@@ -1,13 +1,19 @@
 import { getSettings } from '@/shared/storage';
 import { sendToBackground } from '@/shared/message-bus';
-import { TranslationResult } from '@/types/translation';
+import { TranslationResult, TranslationEngine } from '@/types/translation';
 import { saveVocabEntry } from '@/shared/vocab-store';
 import { getActiveSiteRule } from '@/shared/site-rulesHelper';
 import { setTrustedHTML, clearElement } from './safe-dom';
 
+/** Small delay after double-click to ensure browser selection has updated */
+const SELECTION_SETTLE_MS = 50;
+/** Translation request timeout */
+const TRANSLATE_TIMEOUT_MS = 15000;
+
 let popupElement: HTMLElement | null = null;
 let popupRequestId = 0;
 let popupAbortController: AbortController | null = null;
+let popupEscapeHandler: ((e: KeyboardEvent) => void) | null = null;
 
 export function setupDictionaryListener() {
   document.addEventListener('dblclick', async (e) => {
@@ -29,7 +35,7 @@ export function setupDictionaryListener() {
       const engine = activeRule?.engine;
 
       showDictionaryPopup(text, e.clientX, e.clientY, settings.sourceLang, targetLang, engine);
-    }, 50);
+    }, SELECTION_SETTLE_MS);
   });
 
   // Close popup when clicking outside
@@ -40,7 +46,7 @@ export function setupDictionaryListener() {
   });
 }
 
-async function showDictionaryPopup(text: string, x: number, y: number, sourceLang: string, targetLang: string, engine: any) {
+async function showDictionaryPopup(text: string, x: number, y: number, sourceLang: string, targetLang: string, engine?: TranslationEngine) {
   closePopup();
   popupAbortController = new AbortController();
   const signal = popupAbortController.signal;
@@ -94,16 +100,28 @@ async function showDictionaryPopup(text: string, x: number, y: number, sourceLan
   document.body.appendChild(popupElement);
   popupElement.focus();
 
+  // Close on Escape key
+  popupEscapeHandler = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') closePopup();
+  };
+  document.addEventListener('keydown', popupEscapeHandler);
+
   const listenBtn = popupElement.querySelector('.listen-btn') as HTMLElement;
   const saveBtn = popupElement.querySelector('.save-btn') as HTMLElement;
 
   let currentTranslation = '';
 
   try {
-    const response = await sendToBackground<TranslationResult>({
-      type: 'TRANSLATE_REQUEST',
-      payload: { texts: [text], sourceLang, targetLang, engine },
-    });
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Translation timed out')), TRANSLATE_TIMEOUT_MS)
+    );
+    const response = await Promise.race([
+      sendToBackground<TranslationResult>({
+        type: 'TRANSLATE_REQUEST',
+        payload: { texts: [text], sourceLang, targetLang, engine },
+      }),
+      timeout,
+    ]);
 
     if (requestId !== popupRequestId) return; // Stale response
     if (response && response.success && response.data.translatedTexts.length > 0) {
@@ -157,6 +175,10 @@ async function showDictionaryPopup(text: string, x: number, y: number, sourceLan
 function closePopup() {
   popupAbortController?.abort();
   popupAbortController = null;
+  if (popupEscapeHandler) {
+    document.removeEventListener('keydown', popupEscapeHandler);
+    popupEscapeHandler = null;
+  }
   if (popupElement) {
     popupElement.remove();
     popupElement = null;

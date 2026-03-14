@@ -1,4 +1,5 @@
 import browser from 'webextension-polyfill';
+import { logger } from '@/shared/logger';
 // Dynamic imports used to prevent JSDOM test environments from crashing on pdfjs-dist DOMMatrix references
 let isPdfActive = false;
 
@@ -10,7 +11,7 @@ export function initPdfHandler() {
                       
   if (isPdfUrl || isPdfExtension || isPdfViewer) {
     isPdfActive = true;
-    console.log('[LinguaFlow] PDF Viewer detected. Ready for manual translation trigger via FAB.');
+    logger.info('PDF Viewer detected. Ready for manual translation trigger via FAB.');
   }
 }
 
@@ -73,7 +74,7 @@ export async function startPdfTranslation() {
     workerBlobUrl = URL.createObjectURL(workerBlob);
     pdfjsLib.GlobalWorkerOptions.workerSrc = workerBlobUrl;
   } catch (err) {
-    console.warn('[LinguaFlow] Failed to load PDF JS worker via Blob. It may fall back to fake worker.', err);
+    logger.warn('Failed to load PDF JS worker via Blob. It may fall back to fake worker.', err);
     pdfjsLib.GlobalWorkerOptions.workerSrc = browser.runtime.getURL('pdfjs/pdf.worker.min.mjs');
   }
 
@@ -83,7 +84,7 @@ export async function startPdfTranslation() {
   if (workerBlobUrl) URL.revokeObjectURL(workerBlobUrl);
 }
 
-async function renderPdfFullPage(url: string, container: HTMLElement, pdfjsLib: any) {
+async function renderPdfFullPage(url: string, container: HTMLElement, pdfjsLib: typeof import('pdfjs-dist')) {
   try {
     const loadingTask = pdfjsLib.getDocument({
       url: url,
@@ -91,7 +92,7 @@ async function renderPdfFullPage(url: string, container: HTMLElement, pdfjsLib: 
       cMapPacked: true
     });
     const pdf = await loadingTask.promise;
-    console.log(`[LinguaFlow] PDF Loaded: ${pdf.numPages} pages.`);
+    logger.info(`PDF Loaded: ${pdf.numPages} pages.`);
     
     // Render each page sequentially or all at once
     for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
@@ -122,7 +123,7 @@ async function renderPdfFullPage(url: string, container: HTMLElement, pdfjsLib: 
 
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        const renderTask = page.render({ canvasContext: ctx, viewport: viewport } as any);
+        const renderTask = page.render({ canvas: null, canvasContext: ctx, viewport });
         await renderTask.promise;
       }
 
@@ -189,7 +190,7 @@ async function renderPdfFullPage(url: string, container: HTMLElement, pdfjsLib: 
       container.appendChild(pageContainer);
     }
   } catch (err) {
-    console.error('[LinguaFlow] PDF render error:', err);
+    logger.error('PDF render error:', err);
     container.textContent = '';
     const h2 = document.createElement('h2');
     h2.style.color = 'white';

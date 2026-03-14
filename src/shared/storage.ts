@@ -1,6 +1,7 @@
 import browser from 'webextension-polyfill';
 import { UserSettings } from '@/types/settings';
 import { DEFAULT_SETTINGS } from '@/constants/defaults';
+import { logger } from '@/shared/logger';
 
 export async function getSettings(): Promise<UserSettings> {
   const result = await browser.storage.local.get('settings');
@@ -18,7 +19,7 @@ export async function saveSettings(settings: UserSettings): Promise<void> {
   
   if (settings.enableSync) {
     await syncSettings(settings).catch((err) => {
-      console.warn('[LinguaFlow] Settings sync failed (quota exceeded?):', err?.message);
+      logger.warn('Settings sync failed (quota exceeded?):', err?.message);
     });
   }
 }

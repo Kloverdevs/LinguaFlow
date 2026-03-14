@@ -598,6 +598,89 @@
   outline-offset: 2px;
 }
 
+/* ─── Dark Mode ──────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .it-bilingual-block {
+    background: rgba(30, 41, 59, 0.85);
+    color: var(--it-text-color, #cbd5e1);
+    border-color: rgba(99, 102, 241, 0.2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  .it-bilingual-block:hover {
+    background: rgba(51, 65, 85, 0.95);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+  }
+  .it-error {
+    color: #f87171;
+    border-left-color: #f87171;
+    background: rgba(239, 68, 68, 0.08);
+  }
+  .it-original-tooltip {
+    background: #0f172a;
+    color: #f1f5f9;
+  }
+  #immersive-translate-fab-menu {
+    background: rgba(30, 41, 59, 0.9);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+  }
+  .immersive-fab-menu-header {
+    color: #94a3b8;
+  }
+  .immersive-fab-menu-divider {
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .immersive-fab-menu-item {
+    color: #e2e8f0;
+  }
+  .immersive-fab-menu-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #f8fafc;
+  }
+  .immersive-fab-menu-item:active {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .immersive-fab-menu-icon {
+    background: rgba(99, 102, 241, 0.15);
+  }
+  .immersive-fab-menu-item[data-action="remove"] .immersive-fab-menu-icon {
+    background: rgba(239, 68, 68, 0.15);
+  }
+  .immersive-fab-menu-item[data-action="mode"] .immersive-fab-menu-icon {
+    background: rgba(16, 185, 129, 0.15);
+  }
+  .immersive-fab-menu-badge {
+    background: #334155;
+    color: #94a3b8;
+  }
+  .immersive-fab-menu-badge.on {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+  }
+  .it-onboarding-card {
+    background: #1e293b;
+  }
+  .it-onboarding-header {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+  }
+  .it-ob-title {
+    color: #f1f5f9;
+  }
+  .it-ob-desc {
+    color: #94a3b8;
+  }
+  .it-ob-desc strong {
+    color: #cbd5e1;
+  }
+  .it-onboarding-btn.secondary {
+    background: #334155;
+    color: #e2e8f0;
+  }
+  .it-onboarding-btn.secondary:hover {
+    background: #475569;
+  }
+}
+
 /* ─── Accessibility: Reduced Motion ──────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .immersive-translate-loading::after,

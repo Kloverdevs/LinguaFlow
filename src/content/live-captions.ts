@@ -3,6 +3,11 @@ import { getSettings } from '@/shared/storage';
 import { sendToBackground } from '@/shared/message-bus';
 import { TranslationResult } from '@/types/translation';
 
+/** Debounce for periodic container scans */
+const SCAN_DEBOUNCE_MS = 200;
+/** Debounce for individual caption segment translation */
+const SEGMENT_DEBOUNCE_MS = 400;
+
 let observer: MutationObserver | null = null;
 let bodyObserver: MutationObserver | null = null;
 let currentLanguage = 'en';
@@ -45,6 +50,21 @@ export async function initLiveCaptions() {
   });
 
   bodyObserver.observe(document.body, { childList: true, subtree: true });
+
+  // Clean up observers on page unload to prevent leaks
+  window.addEventListener('beforeunload', cleanupLiveCaptions, { once: true });
+}
+
+export function cleanupLiveCaptions(): void {
+  observer?.disconnect();
+  observer = null;
+  bodyObserver?.disconnect();
+  bodyObserver = null;
+  if (scanTimeout) {
+    clearTimeout(scanTimeout);
+    scanTimeout = null;
+  }
+  pendingTranslations.clear();
 }
 
 export function updateLiveCaptionsLanguage(lang: string) {
@@ -88,7 +108,7 @@ function debounceScan(container: Element) {
     scanTimeout = null;
     const spans = container.querySelectorAll(textSpanSelector);
     spans.forEach(checkAndTranslateElement);
-  }, 200);
+  }, SCAN_DEBOUNCE_MS);
 }
 
 function checkAndTranslateElement(element: Element) {
@@ -114,7 +134,7 @@ function checkAndTranslateElement(element: Element) {
     // Provide a small debounce to wait for a sentence fragment to complete
     const timeoutId = window.setTimeout(() => {
       translateSegment(el, originalText);
-    }, 400);
+    }, SEGMENT_DEBOUNCE_MS);
 
     pendingTranslations.set(el, timeoutId);
   });

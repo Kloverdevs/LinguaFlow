@@ -1,10 +1,17 @@
 import browser from 'webextension-polyfill';
 import { MessageToBackground, MessageToContent, MessageResponse } from '@/types/messages';
 
+/** Default timeout for message bus requests (30 seconds) */
+const MESSAGE_TIMEOUT_MS = 30_000;
+
 export async function sendToBackground<T = unknown>(
-  message: MessageToBackground
+  message: MessageToBackground,
+  timeoutMs = MESSAGE_TIMEOUT_MS
 ): Promise<MessageResponse<T>> {
-  return browser.runtime.sendMessage(message);
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error(`Message '${message.type}' timed out after ${timeoutMs}ms`)), timeoutMs)
+  );
+  return Promise.race([browser.runtime.sendMessage(message), timeout]);
 }
 
 export async function sendToContent<T = unknown>(
@@ -29,6 +36,7 @@ export function onMessage(
     sendResponse: (response: MessageResponse) => void
   ) => boolean | void
 ): () => void {
-  browser.runtime.onMessage.addListener(handler as any);
-  return () => browser.runtime.onMessage.removeListener(handler as any);
+  const wrappedHandler = handler as Parameters<typeof browser.runtime.onMessage.addListener>[0];
+  browser.runtime.onMessage.addListener(wrappedHandler);
+  return () => browser.runtime.onMessage.removeListener(wrappedHandler);
 }

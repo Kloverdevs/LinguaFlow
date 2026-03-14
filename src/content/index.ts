@@ -41,6 +41,7 @@ import {
   incrementProgress,
   setTotalNodes,
   showErrorProgress,
+  setProgressCancelCallback,
 } from './translation-progress';
 
 let isActive = false;
@@ -50,6 +51,9 @@ let isTranslating = false; // guard against concurrent translate calls
 let lastContextMenuPos = { x: 0, y: 0 };
 
 const BATCH_SIZE = 10;
+/** Delay before enqueuing off-screen nodes (short for PDFs, longer for normal pages) */
+const OFFSCREEN_DELAY_MS = 500;
+const OFFSCREEN_DELAY_PDF_MS = 50;
 
 function getFabLabels(settings: UserSettings): FabLabels {
   const t = getStrings(settings.uiLocale ?? 'auto');
@@ -195,7 +199,7 @@ document.addEventListener('contextmenu', (e) => {
 
 // Listen for messages from background/popup
 browser.runtime.onMessage.addListener(((
-    message: any,
+    message: MessageToContent,
     _sender: chrome.runtime.MessageSender,
     sendResponse: (response: MessageResponse) => void
   ): boolean => {
@@ -329,12 +333,11 @@ browser.runtime.onMessage.addListener(((
       default:
         return false;
     }
-  }) as any
+  }) as Parameters<typeof browser.runtime.onMessage.addListener>[0]
 );
 
 async function handleChromeBuiltin(payload: { texts: string[]; sourceLang: string; targetLang: string }): Promise<string[]> {
-  const globalObj = window as any;
-  const api = globalObj.translation || globalObj.ai?.translator;
+  const api = window.translation || window.ai?.translator;
   if (!api) {
     throw new Error('Chrome Built-in Translator API is not available in your browser instance. Please enable the #translation-api flag in chrome://flags.');
   }
@@ -394,6 +397,7 @@ async function translatePage(): Promise<void> {
   isTranslating = true;
   updateFabState();
   applyTranslationStyles(currentSettings);
+  setProgressCancelCallback(() => deactivate());
 
   try {
     const activeRule = getActiveSiteRule(currentSettings);
@@ -432,8 +436,12 @@ async function translatePage(): Promise<void> {
     logger.error('Error during translatePage execution', err);
   } finally {
     isTranslating = false;
+    setProgressCancelCallback(null);
   }
 }
+
+// Track elements currently in translation pipeline to prevent duplicate requests
+const inFlightElements = new WeakSet<Element>();
 
 async function translateNodes(
   nodes: TranslatableNode[],
@@ -441,18 +449,20 @@ async function translateNodes(
   targetLang: string,
   engine?: TranslationEngine
 ): Promise<void> {
-  if (nodes.length === 0) {
-    logger.info('No translatable nodes found');
+  // Filter out elements already being translated (prevents MutationObserver duplicates)
+  const filtered = nodes.filter(n => !inFlightElements.has(n.element));
+  if (filtered.length === 0) {
     return;
   }
+  filtered.forEach(n => inFlightElements.add(n.element));
 
-  logger.info(`Translating ${nodes.length} nodes (${sourceLang} → ${targetLang})`);
-  const loaders = nodes.map((node) => showLoading(node.element));
+  logger.info(`Translating ${filtered.length} nodes (${sourceLang} → ${targetLang})`);
+  const loaders = filtered.map((node) => showLoading(node.element));
 
   let translatedCount = 0;
 
   return new Promise<void>((resolve) => {
-    const pendingIndices = new Set(nodes.map((_, i) => i));
+    const pendingIndices = new Set(filtered.map((_, i) => i));
     const priorityQueue: number[] = [];
     const normalQueue: number[] = [];
     let isProcessing = false;
@@ -496,7 +506,7 @@ async function translateNodes(
       }
       pendingIndices.clear();
       processQueues();
-    }, isPdfViewer ? 50 : 500);
+    }, isPdfViewer ? OFFSCREEN_DELAY_PDF_MS : OFFSCREEN_DELAY_MS);
 
         async function processQueues() {
           if (isProcessing || !isActive) return;
@@ -522,7 +532,7 @@ async function translateNodes(
 
           if (batchIndices.length === 0) break;
 
-          const batchNodes = batchIndices.map(i => nodes[i]);
+          const batchNodes = batchIndices.map(i => filtered[i]);
           const batchLoaders = batchIndices.map(i => loaders[i]);
           const texts = batchNodes.map((n) => n.originalText);
 
@@ -594,8 +604,8 @@ async function translateNodes(
             observer.disconnect();
             observerDisconnected = true;
           }
-          // Only hide the global progress if we aren't accumulating more translations
-          // (Actually, hiding progress is tricky with chunks, so we'll rely on global tracking in translation-progress.ts)
+          // Release in-flight tracking for processed elements
+          filtered.forEach(n => inFlightElements.delete(n.element));
           resolve();
         }
       }

@@ -1,4 +1,4 @@
-import { driver } from 'driver.js';
+import { driver, type DriveStep } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import { getSettings, saveSettings } from '@/shared/storage';
 
@@ -13,7 +13,7 @@ export async function launchProductTour(force: boolean = false): Promise<void> {
 
   isTourRunning = true;
 
-  const steps = [
+  const steps: DriveStep[] = [
     {
       element: '#immersive-translate-fab',
       popover: {
@@ -54,6 +54,6 @@ export async function launchProductTour(force: boolean = false): Promise<void> {
     }
   });
 
-  tour.setSteps(steps as any);
+  tour.setSteps(steps);
   tour.drive();
 }

@@ -4,8 +4,10 @@ import { MessageResponse } from '@/types/messages';
 import { isSubstantiveText } from './content-detector';
 import { isPdfPage } from './pdf-handler';
 import { createLoadingDots } from './safe-dom';
+import { logger } from '@/shared/logger';
 
 const DEBOUNCE_MS = 300;
+const HOVER_TIMEOUT_MS = 8000;
 
 let hoverTimer: ReturnType<typeof setTimeout> | null = null;
 let hoverEnabled = false;
@@ -218,7 +220,7 @@ function handleMouseEnter(e: MouseEvent): void {
 
     try {
       const timeout = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Hover translation timeout')), 8000)
+        setTimeout(() => reject(new Error('Hover translation timeout')), HOVER_TIMEOUT_MS)
       );
       const response = await Promise.race([
         sendToBackground<TranslationResult>({
@@ -259,7 +261,7 @@ function handleMouseEnter(e: MouseEvent): void {
       block.classList.remove('it-loading');
       block.classList.add('it-error');
       block.textContent = 'Translation failed';
-      console.error('[LinguaFlow] Hover translate error:', (err as Error).message);
+      logger.error('Hover translate error:', (err as Error).message);
     } finally {
       if (pendingAbort === abort) {
         pendingAbort = null;

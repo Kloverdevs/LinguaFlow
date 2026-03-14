@@ -144,6 +144,8 @@ export async function walkDOMAsync(
   const nodes: TranslatableNode[] = [];
   const chunk: TranslatableNode[] = [];
   const CHUNK_SIZE = 50;
+  /** Yield to main thread every N nodes to prevent UI freezing */
+  const YIELD_INTERVAL = 200;
   const seen = new WeakSet<HTMLElement>();
 
   const walker = document.createTreeWalker(
@@ -166,8 +168,8 @@ export async function walkDOMAsync(
   while (current) {
     const el = current as HTMLElement;
     
-    // Yield to the main thread every 200 nodes to prevent UI freezing on massive pages
-    if (++iterations % 200 === 0) {
+    // Yield to the main thread periodically to prevent UI freezing on massive pages
+    if (++iterations % YIELD_INTERVAL === 0) {
       await new Promise(resolve => setTimeout(resolve, 0));
     }
 

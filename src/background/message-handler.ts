@@ -21,7 +21,7 @@ export function setupMessageHandler(): void {
         });
 
       return true; // Keep the message channel open for async response
-    }) as any);
+    }) as Parameters<typeof browser.runtime.onMessage.addListener>[0]);
 }
 
 async function handleMessage(

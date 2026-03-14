@@ -4,6 +4,11 @@ import { getSettings } from '@/shared/storage';
 import { logger } from '@/shared/logger';
 import { setTrustedHTML } from './safe-dom';
 
+/** Delay before showing "Translation Active" label after translate button click */
+const TRANSLATE_FEEDBACK_MS = 1000;
+/** Duration of close animation before removing overlay */
+const CLOSE_ANIMATION_MS = 300;
+
 let readerOverlay: HTMLElement | null = null;
 let originalBodyOverflow = '';
 let readerEscHandler: ((e: KeyboardEvent) => void) | null = null;
@@ -79,7 +84,7 @@ function renderReaderUI(title: string, byline: string, htmlContent: string) {
     // Let the main index.ts start the translation.
     // It will walk the DOM inside `readerOverlay` because it walks document.body
     window.postMessage({ type: 'LINGUAFLOW_READER_TRANSLATE' }, window.location.origin);
-    setTimeout(() => { translateBtn.textContent = 'Translation Active'; }, 1000);
+    setTimeout(() => { translateBtn.textContent = 'Translation Active'; }, TRANSLATE_FEEDBACK_MS);
   };
 
   const closeBtn = document.createElement('button');
@@ -162,5 +167,5 @@ function closeReadingMode() {
     // Restore focus to previously focused element
     previousFocus?.focus();
     previousFocus = null;
-  }, 300);
+  }, CLOSE_ANIMATION_MS);
 }

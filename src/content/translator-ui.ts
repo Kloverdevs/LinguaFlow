@@ -1,6 +1,17 @@
 import { DisplayMode } from '@/types/settings';
 import { isPdfPage } from './pdf-handler';
 import { setTrustedHTML, createLoadingDots } from './safe-dom';
+import { logger } from '@/shared/logger';
+
+/** Delay before allowing MutationObserver to re-detect an element after error restore */
+const SKIP_REDETECT_MS = 1000;
+
+/** Languages that use right-to-left text direction */
+const RTL_LANGS = new Set(['ar', 'he', 'ur', 'fa', 'yi', 'ps', 'sd', 'ku', 'ug']);
+
+function isRtlLang(lang: string): boolean {
+  return RTL_LANGS.has(lang.split('-')[0]);
+}
 
 let currentMode: DisplayMode = 'replace';
 let ttsEnabled = true;
@@ -207,6 +218,7 @@ export function replaceLoading(
     loader.classList.remove('immersive-translate-loading');
     loader.classList.add('it-replace-enter');
     loader.setAttribute('lang', targetLang);
+    if (isRtlLang(targetLang)) loader.setAttribute('dir', 'rtl');
     loader.setAttribute('aria-live', 'polite');
 
     // Store original text for hover tooltip
@@ -233,6 +245,7 @@ export function replaceLoading(
     loader.classList.remove('it-loading');
     loader.classList.add('it-bilingual-enter');
     loader.setAttribute('lang', targetLang);
+    if (isRtlLang(targetLang)) loader.setAttribute('dir', 'rtl');
     loader.setAttribute('aria-live', 'polite');
     loader.textContent = translatedText;
 
@@ -264,7 +277,7 @@ export function showError(loader: HTMLElement, error: string): void {
     loader.removeAttribute('data-immersive-original-html');
     loader.removeAttribute('data-immersive-original-lang');
     // Allow re-detection after DOM settles
-    setTimeout(() => loader.removeAttribute('data-immersive-skip'), 1000);
+    setTimeout(() => loader.removeAttribute('data-immersive-skip'), SKIP_REDETECT_MS);
   } else {
     loader.classList.remove('it-loading');
     if (error) {
@@ -276,7 +289,7 @@ export function showError(loader: HTMLElement, error: string): void {
     }
   }
   if (error) {
-    console.error('[LinguaFlow]', error);
+    logger.error(error);
   }
 }
 
@@ -321,6 +334,7 @@ export function removeAllTranslations(): void {
     htmlEl.removeAttribute('data-immersive-original-lang');
     htmlEl.removeAttribute('data-immersive-original-text');
     htmlEl.removeAttribute('data-immersive-hover');
+    htmlEl.removeAttribute('dir');
     htmlEl.classList.remove('immersive-translate-loading');
     htmlEl.classList.remove('it-hover-highlight');
     htmlEl.classList.remove('it-replace-enter');
