@@ -18,6 +18,7 @@ let activeDragCleanup: (() => void) | null = null;
 let activeCloseHandler: ((e: MouseEvent) => void) | null = null;
 let closeHandlerTimer: ReturnType<typeof setTimeout> | null = null;
 let activeEscapeHandler: ((e: KeyboardEvent) => void) | null = null;
+let previousFocus: HTMLElement | null = null;
 
 // Keep settings in sync so popup always uses the latest target language
 onSettingsChanged((newSettings) => {
@@ -26,6 +27,7 @@ onSettingsChanged((newSettings) => {
 
 export async function showSelectionPopup(text: string, x: number, y: number) {
   closeSelectionPopup();
+  previousFocus = document.activeElement as HTMLElement;
 
   if (!currentSettings) {
     currentSettings = await getSettings();
@@ -447,4 +449,6 @@ export function closeSelectionPopup() {
     popupElement.remove();
     popupElement = null;
   }
+  previousFocus?.focus();
+  previousFocus = null;
 }

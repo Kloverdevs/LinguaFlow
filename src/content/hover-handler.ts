@@ -17,6 +17,11 @@ let activeHoverBlock: HTMLElement | null = null;
 let pendingAbort: AbortController | null = null;
 
 export function enableHover(lang: string): void {
+  if (hoverEnabled) {
+    // Already enabled — just update language, don't re-add listeners
+    targetLang = lang;
+    return;
+  }
   hoverEnabled = true;
   targetLang = lang;
   document.addEventListener('mouseenter', handleMouseEnter, true);

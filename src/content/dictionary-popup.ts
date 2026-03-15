@@ -14,6 +14,7 @@ let popupElement: HTMLElement | null = null;
 let popupRequestId = 0;
 let popupAbortController: AbortController | null = null;
 let popupEscapeHandler: ((e: KeyboardEvent) => void) | null = null;
+let previousFocus: HTMLElement | null = null;
 
 export function setupDictionaryListener() {
   document.addEventListener('dblclick', async (e) => {
@@ -48,6 +49,7 @@ export function setupDictionaryListener() {
 
 async function showDictionaryPopup(text: string, x: number, y: number, sourceLang: string, targetLang: string, engine?: TranslationEngine) {
   closePopup();
+  previousFocus = document.activeElement as HTMLElement;
   popupAbortController = new AbortController();
   const signal = popupAbortController.signal;
   const requestId = ++popupRequestId;
@@ -183,4 +185,6 @@ function closePopup() {
     popupElement.remove();
     popupElement = null;
   }
+  previousFocus?.focus();
+  previousFocus = null;
 }

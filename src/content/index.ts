@@ -538,8 +538,8 @@ async function translateNodes(
 
           const SEPARATOR = '\\n---SPLIT---\\n';
           let accumulatedStream = '';
-          const streamListener = (msg: any) => {
-            if (msg.type === 'TRANSLATION_STREAM_CHUNK') {
+          const streamListener = (msg: { type: string; payload?: { chunk?: string } }) => {
+            if (msg.type === 'TRANSLATION_STREAM_CHUNK' && msg.payload?.chunk) {
               accumulatedStream += msg.payload.chunk;
               const parts = accumulatedStream.split(SEPARATOR.trim());
               for (let j = 0; j < parts.length && j < batchLoaders.length; j++) {

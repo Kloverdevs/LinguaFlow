@@ -142,6 +142,13 @@ function renderReaderUI(title: string, byline: string, htmlContent: string) {
   };
   document.addEventListener('keydown', readerEscHandler);
 
+  // Restore scroll lock on page unload in case closeReadingMode isn't called
+  window.addEventListener('beforeunload', () => {
+    if (readerOverlay) {
+      document.body.style.overflow = originalBodyOverflow;
+    }
+  }, { once: true });
+
   // Animate in and move focus to close button
   requestAnimationFrame(() => {
     readerOverlay?.classList.add('it-show');

@@ -229,3 +229,46 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* ─── Focus visible ──────────────────────────────────────────── */
+.it-image-close:focus-visible,
+.it-lang-select:focus-visible,
+.it-retranslate-btn:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .it-spinner {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* ─── Dark mode (extended) ───────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .it-image-header {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+  .it-text-target {
+    border-top-color: rgba(255, 255, 255, 0.1);
+  }
+  .it-text-label {
+    color: #818cf8;
+  }
+  .it-lang-select:focus,
+  .it-source-textarea:focus {
+    border-color: #818cf8;
+  }
+  .it-retranslate-btn {
+    background: #6366f1;
+  }
+  .it-image-container {
+    border-right-color: rgba(255, 255, 255, 0.1);
+  }
+  .it-spinner {
+    border-color: rgba(255, 255, 255, 0.1);
+    border-top-color: #818cf8;
+  }
+}

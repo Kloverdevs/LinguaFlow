@@ -61,7 +61,7 @@ ${texts.length > 1 ? `- Multiple texts are separated by "${SEPARATOR.trim()}". T
     const endpoint = this.config.customEndpoint ?? 'https://api.openai.com/v1/chat/completions';
     const model = this.config.model ?? 'gpt-4o-mini';
 
-    const response = await this.fetchWithTimeout(endpoint, {
+    const response = await this.fetchWithRetry(endpoint, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.config.apiKey}`,
@@ -146,7 +146,7 @@ ${texts.length > 1 ? `- Multiple texts are separated by "${SEPARATOR.trim()}". T
     const endpoint = this.config.customEndpoint ?? 'https://api.openai.com/v1/chat/completions';
     const model = this.config.model ?? 'gpt-4o-mini';
 
-    const response = await this.fetchWithTimeout(endpoint, {
+    const response = await this.fetchWithRetry(endpoint, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.config.apiKey}`,
@@ -194,7 +194,7 @@ ${texts.length > 1 ? `- Multiple texts are separated by "${SEPARATOR.trim()}". T
     const model = this.config.model?.includes('gpt-4') ? this.config.model : 'gpt-4o-mini';
     const endpoint = this.config.customEndpoint ?? 'https://api.openai.com/v1/chat/completions';
 
-    const response = await this.fetchWithTimeout(endpoint, {
+    const response = await this.fetchWithRetry(endpoint, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.config.apiKey}`,

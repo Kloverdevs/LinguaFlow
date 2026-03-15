@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { useSettings } from '../../popup/hooks/useSettings';
+import { logger } from '@/shared/logger';
 
 export const SettingsBackup: React.FC = () => {
   const { settings, updateSettings } = useSettings();
@@ -49,7 +50,7 @@ export const SettingsBackup: React.FC = () => {
           alert('Invalid settings file format.');
         }
       } catch (err) {
-        console.error('Import failed', err);
+        logger.error('Import failed', err);
         alert('Failed to parse the settings file.');
       }
       

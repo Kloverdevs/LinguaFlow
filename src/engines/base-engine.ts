@@ -18,6 +18,11 @@ export abstract class BaseTranslationEngine {
 
   abstract getMaxBatchSize(): number;
 
+  /** Maximum retries for rate-limited or server error responses */
+  private static readonly MAX_RETRIES = 3;
+  /** Base delay in ms for exponential backoff */
+  private static readonly RETRY_BASE_MS = 1000;
+
   protected async fetchWithTimeout(
     url: string,
     options: RequestInit,
@@ -35,6 +40,41 @@ export abstract class BaseTranslationEngine {
     } finally {
       clearTimeout(timeoutId);
     }
+  }
+
+  /**
+   * Fetch with automatic retry on 429 (rate limit) and 5xx (server errors).
+   * Uses exponential backoff with jitter. Respects Retry-After header.
+   */
+  protected async fetchWithRetry(
+    url: string,
+    options: RequestInit,
+    timeoutMs = 30000
+  ): Promise<Response> {
+    let lastError: Error | null = null;
+    for (let attempt = 0; attempt <= BaseTranslationEngine.MAX_RETRIES; attempt++) {
+      const response = await this.fetchWithTimeout(url, options, timeoutMs);
+      if (response.ok || (response.status < 429)) {
+        return response;
+      }
+      // Retry on rate limit (429) or server errors (500-599)
+      if (response.status === 429 || response.status >= 500) {
+        if (attempt === BaseTranslationEngine.MAX_RETRIES) {
+          const text = await response.text();
+          throw new Error(`API error ${response.status} after ${BaseTranslationEngine.MAX_RETRIES + 1} attempts: ${text}`);
+        }
+        const retryAfter = response.headers.get('retry-after');
+        const delayMs = retryAfter
+          ? parseInt(retryAfter, 10) * 1000
+          : BaseTranslationEngine.RETRY_BASE_MS * Math.pow(2, attempt) + Math.random() * 500;
+        await new Promise(r => setTimeout(r, delayMs));
+        lastError = new Error(`API error ${response.status}`);
+        continue;
+      }
+      // Non-retryable error — return response for caller to handle
+      return response;
+    }
+    throw lastError ?? new Error('Unexpected retry loop exit');
   }
 
   async detectLanguage(_text: string): Promise<string | null> {

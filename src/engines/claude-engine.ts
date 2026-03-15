@@ -61,7 +61,7 @@ ${texts.length > 1 ? `- Multiple texts are separated by "${SEPARATOR.trim()}". T
     const endpoint = this.config.customEndpoint ?? 'https://api.anthropic.com/v1/messages';
     const model = this.config.model ?? 'claude-sonnet-4-5-20250514';
 
-    const response = await this.fetchWithTimeout(endpoint, {
+    const response = await this.fetchWithRetry(endpoint, {
       method: 'POST',
       headers: {
         'x-api-key': this.config.apiKey!,
@@ -146,7 +146,7 @@ ${texts.length > 1 ? `- Multiple texts are separated by "${SEPARATOR.trim()}". T
     const endpoint = this.config.customEndpoint ?? 'https://api.anthropic.com/v1/messages';
     const model = this.config.model ?? 'claude-sonnet-4-5-20250514';
 
-    const response = await this.fetchWithTimeout(endpoint, {
+    const response = await this.fetchWithRetry(endpoint, {
       method: 'POST',
       headers: {
         'x-api-key': this.config.apiKey!,
@@ -201,7 +201,7 @@ ${texts.length > 1 ? `- Multiple texts are separated by "${SEPARATOR.trim()}". T
     const mediaType = match[1];
     const data = match[2];
 
-    const response = await this.fetchWithTimeout(endpoint, {
+    const response = await this.fetchWithRetry(endpoint, {
       method: 'POST',
       headers: {
         'x-api-key': this.config.apiKey!,
