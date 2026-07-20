@@ -231,7 +231,7 @@ export async function walkDOMAsync(
     if (chunk.length >= CHUNK_SIZE) {
       try {
         if (onNodesFound) onNodesFound([...chunk]);
-      } catch (err) {
+      } catch {
         // Don't let a callback error stop the DOM walk
       }
       nodes.push(...chunk);
@@ -245,7 +245,7 @@ export async function walkDOMAsync(
   if (chunk.length > 0) {
     try {
       if (onNodesFound) onNodesFound([...chunk]);
-    } catch (err) {
+    } catch {
       // Don't let a callback error lose the remaining nodes
     }
     nodes.push(...chunk);

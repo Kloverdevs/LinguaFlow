@@ -26,7 +26,7 @@ export const SiteRulesManager: React.FC = () => {
       }
       const url = new URL(cleanDomain);
       cleanDomain = url.hostname.replace(/^www\./, '');
-    } catch (e) {
+    } catch {
       // Fallback if URL parsing fails
       cleanDomain = newDomain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
     }

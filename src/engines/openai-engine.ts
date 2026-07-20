@@ -108,7 +108,7 @@ ${texts.length > 1 ? `- Multiple texts are separated by "${SEPARATOR.trim()}". T
                   content += contentText;
                   onStream(contentText);
                 }
-              } catch (e) {
+              } catch {
                 // Ignore malformed JSON or other parse errors mid-stream
               }
             }

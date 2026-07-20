@@ -32,9 +32,10 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
   if (!currentSettings) {
     currentSettings = await getSettings();
   }
+  const settings = currentSettings;
 
-  const activeRule = getActiveSiteRule(currentSettings);
-  const targetLang = activeRule?.targetLang || currentSettings.targetLang;
+  const activeRule = getActiveSiteRule(settings);
+  const targetLang = activeRule?.targetLang || settings.targetLang;
   const engine = activeRule?.engine;
 
   popupElement = document.createElement('div');
@@ -57,7 +58,7 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
   langPills.className = 'it-lang-pills';
   const sourcePill = document.createElement('span');
   sourcePill.className = 'it-lang-pill';
-  sourcePill.textContent = currentSettings.sourceLang.toUpperCase();
+  sourcePill.textContent = settings.sourceLang.toUpperCase();
   const arrow = document.createElement('span');
   arrow.textContent = '\u2192';
   const langSelect = document.createElement('select');
@@ -236,7 +237,7 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
         type: 'TRANSLATE_REQUEST',
         payload: { 
           texts: [text], 
-          sourceLang: currentSettings.sourceLang, 
+          sourceLang: settings.sourceLang, 
           targetLang: activeTargetLang,
           engine: engine
         },
@@ -249,7 +250,7 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
         // Focus first action button for keyboard accessibility
         copyBtn.focus();
 
-        if (currentSettings.compareEngine && currentSettings.compareEngine !== engine) {
+        if (settings.compareEngine && settings.compareEngine !== engine) {
           compareBtn.style.display = 'flex';
         }
       } else {
@@ -279,11 +280,11 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
   });
 
   compareBtn.addEventListener('click', async () => {
-    if (!currentSettings.compareEngine) return;
+    if (!settings.compareEngine) return;
     compareBtn.disabled = true;
     compareBtn.style.opacity = '0.5';
     compareDiv.style.display = 'block';
-    compareHeader.textContent = `Comparing with ${currentSettings.compareEngine}...`;
+    compareHeader.textContent = `Comparing with ${settings.compareEngine}...`;
     clearElement(compareText);
     compareText.appendChild(createStatusSpan('Translating...'));
 
@@ -292,9 +293,9 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
         type: 'TRANSLATE_REQUEST',
         payload: { 
           texts: [text], 
-          sourceLang: currentSettings.sourceLang, 
+          sourceLang: settings.sourceLang, 
           targetLang: currentTargetConfig,
-          engine: currentSettings.compareEngine
+          engine: settings.compareEngine
         },
       });
 
@@ -331,7 +332,7 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
         type: 'EXPLAIN_GRAMMAR_REQUEST',
         payload: { 
           text, 
-          sourceLang: currentSettings.sourceLang, 
+          sourceLang: settings.sourceLang, 
           targetLang: currentTargetConfig
         },
       });
@@ -388,7 +389,7 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      if (currentSettings.sourceLang !== 'auto') utterance.lang = currentSettings.sourceLang;
+      if (settings.sourceLang !== 'auto') utterance.lang = settings.sourceLang;
       window.speechSynthesis.speak(utterance);
     }
   });
@@ -410,14 +411,14 @@ export async function showSelectionPopup(text: string, x: number, y: number) {
       await saveVocabEntry({
         text,
         translation: currentTranslation,
-        sourceLang: currentSettings.sourceLang,
+        sourceLang: settings.sourceLang,
         targetLang: currentTargetConfig,
         sourceUrl: window.location.href,
         context: text
       });
       saveBtn.classList.add('saved');
       setTrustedHTML(saveBtn, '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>\n        Saved');
-    } catch (e) {
+    } catch {
       saveBtn.textContent = 'Error';
     }
   });

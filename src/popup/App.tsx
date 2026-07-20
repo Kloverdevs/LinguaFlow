@@ -245,7 +245,7 @@ export function App() {
   useEffect(() => {
     browser.tabs?.query({ active: true, currentWindow: true }).then((tabs) => {
       if (tabs[0]?.url) {
-        try { setCurrentHost(new URL(tabs[0].url).hostname); } catch {}
+        try { setCurrentHost(new URL(tabs[0].url).hostname); } catch { /* invalid URL, ignore */ }
       }
     });
   }, []);

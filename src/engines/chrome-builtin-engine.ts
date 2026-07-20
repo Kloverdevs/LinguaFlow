@@ -1,7 +1,6 @@
 import browser from 'webextension-polyfill';
 import { BaseTranslationEngine } from './base-engine';
 import { MessageResponse } from '@/types/messages';
-import { logger } from '@/shared/logger';
 
 // Type definitions for the experimental Chrome translation API
 type TranslatorAvailability = 'readily' | 'after-download' | 'no';

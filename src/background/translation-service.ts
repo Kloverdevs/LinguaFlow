@@ -6,7 +6,6 @@ import { getEngineInfo } from '@/constants/engines';
 import { logger } from '@/shared/logger';
 import { getGlossary } from '@/shared/glossary-store';
 import { GlossaryEntry } from '@/types/glossary';
-import { UserSettings } from '@/types/settings';
 
 const MAX_CONCURRENT_BATCHES = 3;
 

@@ -99,7 +99,7 @@ async function renderPdfFullPage(url: string, container: HTMLElement, pdfjsLib: 
       const page = await pdf.getPage(pageNum);
       // Calculate scale to fit 90% of the screen width
       const containerWidth = window.innerWidth * 0.9;
-      let unscaledViewport = page.getViewport({ scale: 1 });
+      const unscaledViewport = page.getViewport({ scale: 1 });
       let scale = containerWidth / unscaledViewport.width;
       if (scale > 1.5) scale = 1.5; // cap it so tiny PDFs don't get huge
       if (scale <= 0 || !isFinite(scale)) scale = 1.0; // fallback safety

@@ -1,6 +1,5 @@
 import { getStrings } from '@/shared/i18n';
 import { getSettings } from '@/shared/storage';
-import { setTrustedHTML } from './safe-dom';
 
 /** Delay before resetting progress bar after hide animation */
 const HIDE_RESET_MS = 300;

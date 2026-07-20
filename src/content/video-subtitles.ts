@@ -8,7 +8,7 @@ let bodyObserver: MutationObserver | null = null;
 let currentLanguage = 'en';
 
 // Batching state — collect lines over a short window then translate together
-let pendingLines: { line: Element; text: string; transDiv: HTMLElement }[] = [];
+const pendingLines: { line: Element; text: string; transDiv: HTMLElement }[] = [];
 let batchTimer: ReturnType<typeof setTimeout> | null = null;
 const BATCH_DELAY = 100; // ms to wait before flushing batch
 

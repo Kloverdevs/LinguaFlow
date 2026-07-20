@@ -1,6 +1,25 @@
-import { DisplayMode } from '@/types/settings';
+import { DisplayMode, FabPosition } from '@/types/settings';
 import { isPdfPage } from './pdf-handler';
 import { setTrustedHTML } from './safe-dom';
+
+/**
+ * Clamp a desired FAB top-left position so the button stays fully within the
+ * viewport. Pure helper — exported for unit testing.
+ */
+export function clampFabPosition(
+  x: number,
+  y: number,
+  viewportW: number,
+  viewportH: number,
+  size: number
+): FabPosition {
+  const maxX = Math.max(0, viewportW - size);
+  const maxY = Math.max(0, viewportH - size);
+  return {
+    x: Math.max(0, Math.min(maxX, x)),
+    y: Math.max(0, Math.min(maxY, y)),
+  };
+}
 
 let fab: HTMLElement | null = null;
 let fabMenu: HTMLElement | null = null;
@@ -29,6 +48,7 @@ type FabCallbacks = {
   isActive: () => boolean;
   isHoverEnabled: () => boolean;
   getDisplayMode: () => DisplayMode;
+  onDragEnd?: (pos: FabPosition) => void;
 };
 
 export type FabLabels = {
@@ -41,7 +61,7 @@ export type FabLabels = {
 
 let callbacks: FabCallbacks;
 
-export function createFloatingButton(cbs: FabCallbacks, labels: FabLabels, size = 48): void {
+export function createFloatingButton(cbs: FabCallbacks, labels: FabLabels, size = 48, initialPos?: FabPosition): void {
   callbacks = cbs;
   currentFabSize = size;
 
@@ -74,6 +94,11 @@ export function createFloatingButton(cbs: FabCallbacks, labels: FabLabels, size 
 
   document.body.appendChild(fabMenu);
   document.body.appendChild(fab);
+
+  // Restore a previously saved drag position (clamped to the current viewport)
+  if (initialPos) {
+    applyFabPosition(initialPos);
+  }
 
   // Store references for cleanup
   documentClickHandler = (e: MouseEvent) => {
@@ -205,14 +230,13 @@ function handleFabMouseMove(e: MouseEvent): void {
   }
 
   if (isDragging && fab) {
-    const newX = Math.max(0, Math.min(window.innerWidth - currentFabSize, fabStartX + dx));
-    const newY = Math.max(0, Math.min(window.innerHeight - currentFabSize, fabStartY + dy));
+    const clamped = clampFabPosition(fabStartX + dx, fabStartY + dy, window.innerWidth, window.innerHeight, currentFabSize);
 
     // Switch from bottom/right to top/left positioning for drag
     fab.style.right = 'auto';
     fab.style.bottom = 'auto';
-    fab.style.left = `${newX}px`;
-    fab.style.top = `${newY}px`;
+    fab.style.left = `${clamped.x}px`;
+    fab.style.top = `${clamped.y}px`;
   }
 }
 
@@ -220,6 +244,7 @@ function handleFabMouseUp(): void {
   document.removeEventListener('mousemove', handleFabMouseMove);
   document.removeEventListener('mouseup', handleFabMouseUp);
 
+  const didDrag = isDragging;
   isDragging = false;
   if (fab) {
     fab.style.transition = '';
@@ -228,6 +253,24 @@ function handleFabMouseUp(): void {
 
   // Update menu position to follow FAB
   updateMenuPosition();
+
+  // Persist the new position so it survives navigation/reloads
+  if (didDrag && fab && callbacks?.onDragEnd) {
+    const rect = fab.getBoundingClientRect();
+    callbacks.onDragEnd(
+      clampFabPosition(rect.left, rect.top, window.innerWidth, window.innerHeight, currentFabSize)
+    );
+  }
+}
+
+/** Apply an absolute (top/left) position to the FAB, clamped to the viewport. */
+function applyFabPosition(pos: FabPosition): void {
+  if (!fab) return;
+  const clamped = clampFabPosition(pos.x, pos.y, window.innerWidth, window.innerHeight, currentFabSize);
+  fab.style.right = 'auto';
+  fab.style.bottom = 'auto';
+  fab.style.left = `${clamped.x}px`;
+  fab.style.top = `${clamped.y}px`;
 }
 
 function handleFabClick(e: Event): void {
@@ -262,7 +305,8 @@ function updateMenuPosition(): void {
 
 /* ─── Menu Logic ─── */
 function toggleMenu(): void {
-  isMenuOpen ? closeMenu() : openMenu();
+  if (isMenuOpen) closeMenu();
+  else openMenu();
 }
 
 function openMenu(): void {

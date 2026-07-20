@@ -137,7 +137,7 @@ async function showDictionaryPopup(text: string, x: number, y: number, sourceLan
       i.textContent = errMsg;
       transDiv.appendChild(i);
     }
-  } catch (err) {
+  } catch {
     clearElement(transDiv);
     const i = document.createElement('i');
     i.style.color = 'red';
@@ -168,7 +168,7 @@ async function showDictionaryPopup(text: string, x: number, y: number, sourceLan
       });
       saveBtn.classList.add('saved');
       saveBtn.textContent = 'Saved';
-    } catch (e) {
+    } catch {
       saveBtn.textContent = 'Error';
     }
   }, { signal });

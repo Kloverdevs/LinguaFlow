@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import browser from 'webextension-polyfill';
 import { useSettings } from '../popup/hooks/useSettings';
 import { ENGINES } from '@/constants/engines';
 import { TARGET_LANGUAGES } from '@/constants/languages';
@@ -145,6 +146,17 @@ export function App() {
           <button
             className={`settings-toggle ${settings.hoverMode ? 'active' : ''}`}
             onClick={() => updateSettings({ hoverMode: !settings.hoverMode })}
+          />
+        </div>
+
+        <div className="setting-row">
+          <div className="setting-info">
+            <span className="setting-name">Auto-detect &amp; Prompt</span>
+            <span className="setting-desc">Offer to translate when a page is in a foreign language</span>
+          </div>
+          <button
+            className={`settings-toggle ${settings.autoDetectPrompt !== false ? 'active' : ''}`}
+            onClick={() => updateSettings({ autoDetectPrompt: settings.autoDetectPrompt === false })}
           />
         </div>
 
@@ -317,7 +329,7 @@ export function App() {
 
       {/* ─── Footer ─── */}
       <div className="settings-footer">
-        <span className="settings-version">Version 1.0.0</span>
+        <span className="settings-version">Version {browser.runtime.getManifest().version}</span>
       </div>
     </div>
   );

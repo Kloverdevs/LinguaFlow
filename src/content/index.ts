@@ -4,12 +4,14 @@ import './video-subtitles.css';
 import './dictionary-popup.css';
 import './selection-popup.css';
 import './reading-mode.css';
+import './translate-prompt.css';
 import { initVideoSubtitles, updateVideoSubtitleLanguage } from './video-subtitles';
 import { initLiveCaptions, updateLiveCaptionsLanguage } from './live-captions';
 import { initPdfHandler, isPdfPage, startPdfTranslation } from './pdf-handler';
 import { toggleReadingMode } from './reading-mode';
 import { setupDictionaryListener } from './dictionary-popup';
 import { showSelectionPopup } from './selection-popup';
+import { maybeShowTranslatePrompt } from './translate-prompt';
 import { walkDOMAsync } from './dom-walker';
 import {
   showLoading,
@@ -24,7 +26,6 @@ import { startObserving, stopObserving } from './mutation-observer';
 import { createFloatingButton, updateFabState, updateFabLabels, updateFabSize, setFabVisible } from './floating-button';
 import type { FabLabels } from './floating-button';
 import { showImageTranslationModal } from './image-translator';
-import { launchProductTour } from './product-tour';
 import { sendToBackground } from '@/shared/message-bus';
 import { onSettingsChanged, getSettings, updateSettings } from '@/shared/storage';
 import { getActiveSiteRule } from '@/shared/site-rulesHelper';
@@ -112,8 +113,11 @@ document.addEventListener('contextmenu', (e) => {
     getDisplayMode: () => currentSettings?.displayMode ?? 'replace',
     onReaderMode: () => {
       toggleReadingMode();
+    },
+    onDragEnd: (pos) => {
+      updateSettings({ fabPosition: pos });
     }
-  }, getFabLabels(currentSettings), fabSize);
+  }, getFabLabels(currentSettings), fabSize, currentSettings.fabPosition);
 
   // Apply FAB visibility
   if (currentSettings.fabEnabled === false) {
@@ -193,6 +197,26 @@ document.addEventListener('contextmenu', (e) => {
       document.addEventListener('DOMContentLoaded', () => translatePage(), { once: true });
     } else {
       translatePage();
+    }
+  } else if (!isPdfPage()) {
+    // Otherwise, detect the page language and offer a translate prompt
+    const runPrompt = () => {
+      if (!currentSettings) return;
+      maybeShowTranslatePrompt(currentSettings, {
+        onTranslate: () => translatePage(),
+        onAlways: () => {
+          const sites = currentSettings?.autoTranslateSites ?? [];
+          if (!sites.includes(hostname)) {
+            updateSettings({ autoTranslateSites: [...sites, hostname] });
+          }
+          translatePage();
+        },
+      });
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', runPrompt, { once: true });
+    } else {
+      runPrompt();
     }
   }
 })();
@@ -538,9 +562,10 @@ async function translateNodes(
 
           const SEPARATOR = '\\n---SPLIT---\\n';
           let accumulatedStream = '';
-          const streamListener = (msg: { type: string; payload?: { chunk?: string } }) => {
-            if (msg.type === 'TRANSLATION_STREAM_CHUNK' && msg.payload?.chunk) {
-              accumulatedStream += msg.payload.chunk;
+          const streamListener = (msg: unknown) => {
+            const m = msg as { type?: string; payload?: { chunk?: string } };
+            if (m.type === 'TRANSLATION_STREAM_CHUNK' && m.payload?.chunk) {
+              accumulatedStream += m.payload.chunk;
               const parts = accumulatedStream.split(SEPARATOR.trim());
               for (let j = 0; j < parts.length && j < batchLoaders.length; j++) {
                 if (parts[j]) {

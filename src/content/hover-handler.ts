@@ -13,7 +13,6 @@ let hoverTimer: ReturnType<typeof setTimeout> | null = null;
 let hoverEnabled = false;
 let targetLang = 'en';
 let activeHoverEl: HTMLElement | null = null;
-let activeHoverBlock: HTMLElement | null = null;
 let pendingAbort: AbortController | null = null;
 
 export function enableHover(lang: string): void {
@@ -217,7 +216,6 @@ function handleMouseEnter(e: MouseEvent): void {
     block.setAttribute('data-immersive-hover-block', 'true');
     block.appendChild(createLoadingDots());
     el.parentNode?.insertBefore(block, el.nextSibling);
-    activeHoverBlock = block;
 
     // Create abort controller for this request
     const abort = new AbortController();

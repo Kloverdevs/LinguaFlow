@@ -114,3 +114,15 @@ export const LANGUAGES: Language[] = [
 
 // Target languages exclude "auto"
 export const TARGET_LANGUAGES = LANGUAGES.filter((l) => l.code !== 'auto');
+
+/**
+ * Resolve a language display name from a code. Falls back to the base language
+ * subtag (e.g. "pt-BR" → "pt") before giving up.
+ */
+export function getLanguageName(code: string): string | undefined {
+  if (!code) return undefined;
+  const exact = LANGUAGES.find((l) => l.code.toLowerCase() === code.toLowerCase());
+  if (exact) return exact.name;
+  const base = code.split(/[-_]/)[0].toLowerCase();
+  return LANGUAGES.find((l) => l.code.toLowerCase() === base)?.name;
+}

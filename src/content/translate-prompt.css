@@ -1,0 +1,101 @@
+#immersive-translate-prompt {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483646;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(92vw, 560px);
+  padding: 10px 12px;
+  background: rgba(30, 30, 30, 0.96);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 0.9rem;
+  color: #f5f5f5;
+  animation: it-prompt-slidein 0.25s ease-out;
+}
+
+#immersive-translate-prompt .it-prompt-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.4;
+}
+
+#immersive-translate-prompt .it-prompt-message svg {
+  flex-shrink: 0;
+  fill: #818cf8;
+}
+
+#immersive-translate-prompt .it-prompt-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: #eee;
+  background: rgba(255, 255, 255, 0.12);
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+
+#immersive-translate-prompt .it-prompt-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+#immersive-translate-prompt .it-prompt-primary {
+  background: #6366f1;
+  color: #fff;
+}
+
+#immersive-translate-prompt .it-prompt-primary:hover {
+  background: #4f46e5;
+}
+
+#immersive-translate-prompt .it-prompt-close {
+  border: none;
+  background: transparent;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: background 0.2s, color 0.2s;
+}
+
+#immersive-translate-prompt .it-prompt-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+#immersive-translate-prompt .it-prompt-btn:focus-visible,
+#immersive-translate-prompt .it-prompt-close:focus-visible {
+  outline: 2px solid #818cf8;
+  outline-offset: 2px;
+}
+
+@keyframes it-prompt-slidein {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #immersive-translate-prompt {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

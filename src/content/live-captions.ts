@@ -177,7 +177,7 @@ async function translateSegment(element: Element, originalText: string) {
       transDiv.remove();
       translationNodes.delete(element);
     }
-  } catch (e) {
+  } catch {
     if (transDiv.getAttribute('data-original') === originalText) {
       transDiv.remove();
       translationNodes.delete(element);

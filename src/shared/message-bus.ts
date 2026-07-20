@@ -11,7 +11,8 @@ export async function sendToBackground<T = unknown>(
   const timeout = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error(`Message '${message.type}' timed out after ${timeoutMs}ms`)), timeoutMs)
   );
-  return Promise.race([browser.runtime.sendMessage(message), timeout]);
+  const response = await Promise.race([browser.runtime.sendMessage(message), timeout]);
+  return response as MessageResponse<T>;
 }
 
 export async function sendToContent<T = unknown>(

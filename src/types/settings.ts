@@ -20,6 +20,11 @@ export interface SiteRule {
   targetLang?: string;
 }
 
+export interface FabPosition {
+  x: number;
+  y: number;
+}
+
 export interface UserSettings {
   sourceLang: string;
   targetLang: string;
@@ -44,4 +49,6 @@ export interface UserSettings {
   compareEngine?: TranslationEngine;
   enableSync?: boolean;
   dyslexiaFont?: boolean;
+  fabPosition?: FabPosition;
+  autoDetectPrompt?: boolean;
 }

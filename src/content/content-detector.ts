@@ -30,6 +30,7 @@ const OWN_SELECTORS = [
   '#immersive-translate-fab',
   '#immersive-translate-fab-menu',
   '#immersive-translate-onboarding',
+  '#immersive-translate-prompt',
   '[data-immersive-block]',
 ];
 

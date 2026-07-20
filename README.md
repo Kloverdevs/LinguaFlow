@@ -1,10 +1,10 @@
 # LinguaFlow
 
-**Open-source bilingual webpage translation Chrome extension.**
+**Open-source bilingual webpage translation extension for Chrome & Firefox.**
 
-LinguaFlow translates webpages in-place, showing translations alongside the original text. It supports 10 translation engines (6 free, 4 paid), 29 languages, hover-to-translate mode, a fully localized UI in 11 languages, and a draggable floating action button for quick access.
+LinguaFlow translates web pages, PDFs, and images in-place, showing translations alongside the original text. It supports 11 translation engines (6 free, 4 paid, plus an offline on-device engine), 29 languages, hover-to-translate mode, double-click dictionary lookups, a rich text-selection popup, a fully localized UI in 11 languages, and a draggable floating action button for quick access.
 
-Built with **React 19**, **TypeScript 5.7**, **Vite 6**, and **Chrome Manifest V3**.
+Built with **React 19**, **TypeScript 5.7**, **Vite 6**, and **Manifest V3** — packaged for both **Chrome** (`dist/`) and **Firefox** (`dist-firefox/`).
 
 ---
 
@@ -14,11 +14,12 @@ Built with **React 19**, **TypeScript 5.7**, **Vite 6**, and **Chrome Manifest V
   <br>
   <img src="./store-assets/store_screenshot_1_final.png" width="800" alt="Bilingual Mode Example" />
 - **Replace mode** — swap original text with translation entirely
-- **10 translation engines** — 6 free (no API key), 4 paid with API key validation
+- **11 translation engines** — 6 free (no API key), 4 paid with API key validation, plus an offline on-device engine (Chrome Built-in AI)
 - **29 languages** — auto-detect source language, 28 target languages
 - **Hover translate** — hover over any paragraph to translate it individually (300ms debounce); works independently alongside full-page translation
-- **Floating Action Button (FAB)** — draggable on-page button with radial menu for Translate Page, Restore Original, Bilingual Mode, and Hover Translate. Configurable size (32–72px) and can be disabled in settings
-- **Keyboard shortcut** — `Alt+A` to toggle translation
+- **Floating Action Button (FAB)** — draggable on-page button with radial menu for Translate Page, Restore Original, Bilingual Mode, and Hover Translate. Configurable size (32–72px), remembers its position across page loads, and can be disabled in settings
+- **Auto-detect & prompt** — when a page is in a foreign language, a slim top bar offers to translate it (Translate / Always for this site / dismiss); honors auto- and never-translate lists and per-session dismissals
+- **Keyboard shortcuts** — `Alt+A` toggle translation, `Ctrl+Shift+H` toggle hover mode, `Ctrl+Shift+S` translate selection
 - **Context menu** — right-click "Translate Selection" or "Translate Page"
 - **Smart content detection** — identifies main content areas (`<article>`, `<main>`, `[role="main"]`) with text-density scoring fallback; skips nav, footer, sidebar, ads, scripts
 - **SPA support** — MutationObserver watches for dynamically added content
@@ -29,8 +30,18 @@ Built with **React 19**, **TypeScript 5.7**, **Vite 6**, and **Chrome Manifest V
 - **Popup scaling** — adjust popup size for accessibility
 - **Site lists** — auto-translate and never-translate domain lists
 - **API key management** — per-engine configuration with validation
+- **Selection popup** — select text to translate, compare a second engine, get an LLM grammar explanation, listen via text-to-speech, or save the word to your vocabulary list
+- **Dictionary lookups** — double-click any word for an inline definition popup
+- **Reading mode** — extract and translate the main article (Readability-powered), with an optional dyslexia-friendly font
+- **PDF translation** — split-view native renderer for local and online PDFs
+- **Image OCR** — right-click "Inspect Image Text" to OCR and translate flat images (Tesseract.js)
+- **Live captions & video subtitles** — translate on-screen captions and video subtitle tracks
+- **Per-site rules** — pin a specific engine and target language per domain
+- **Formality control** — auto/formal/informal tone on supported engines
+- **Settings sync** — optional `storage.sync` of preferences (API keys are never synced)
+- **Guided product tour** — optional interactive walkthrough
 - **Onboarding** — first-time tooltip guiding new users
-- **225 unit tests** across 22 test files
+- **253 unit tests** across 26 test files
 
 ---
 
@@ -58,6 +69,12 @@ Built with **React 19**, **TypeScript 5.7**, **Vite 6**, and **Chrome Manifest V
 
 Configure API keys in **Settings > API Keys**. Each engine has a **Validate** button to test your key before use.
 
+### Offline (on-device, no key)
+
+| Engine | Notes |
+|--------|-------|
+| **Chrome Built-in AI** | Private on-device translation via Chrome's built-in Translator API (Chrome 138+ with the built-in AI translation feature available) |
+
 ---
 
 ## Supported Languages
@@ -72,7 +89,7 @@ Auto Detect, English, Chinese (Simplified & Traditional), Japanese, Korean, Fren
 
 - Node.js 18+
 - npm 9+
-- Chrome 116+ (Manifest V3 support)
+- Chrome 116+ or Firefox 142+ (Manifest V3 support)
 
 ### Install & Build
 
@@ -83,10 +100,19 @@ npm install
 npm run build
 ```
 
-1. Open `chrome://extensions` in Chrome
+`npm run build` produces both browser bundles plus packaged zips:
+- `dist/` + `linguaflow-chrome.zip` — Chrome / Edge / Brave
+- `dist-firefox/` + `linguaflow-firefox.zip` — Firefox
+
+**Chrome / Edge / Brave**
+1. Open `chrome://extensions`
 2. Enable **Developer mode** (top right)
-3. Click **Load unpacked**
-4. Select the `dist/` folder
+3. Click **Load unpacked** and select the `dist/` folder
+
+**Firefox**
+1. Open `about:debugging#/runtime/this-firefox`
+2. Click **Load Temporary Add-on…**
+3. Select `dist-firefox/manifest.json`
 
 ### Development
 
@@ -101,12 +127,14 @@ Starts all three Vite watchers in parallel (popup/options, content script, backg
 | Command | Description |
 |---------|-------------|
 | `npm run dev` | Watch mode for all three bundles |
-| `npm run build` | Production build to `dist/` |
-| `npm run test` | Run 225 unit tests with Vitest |
+| `npm run build` | Production build for Chrome + Firefox, then zip |
+| `npm run build:chrome` | Chrome-only build to `dist/` |
+| `npm run build:firefox` | Firefox-only build to `dist-firefox/` |
+| `npm run test` | Run 238 unit tests with Vitest |
 | `npm run test:watch` | Run tests in watch mode |
 | `npm run lint` | ESLint check |
 | `npm run typecheck` | TypeScript type checking |
-| `npm run clean` | Remove `dist/` directory |
+| `npm run clean` | Remove build output (`dist/`, `dist-firefox/`) and zips |
 
 ---
 
@@ -137,7 +165,7 @@ A draggable button on every page with quick actions:
 
 
 
-Drag it anywhere on the page. In Settings, you can disable the FAB or adjust its size (32–72px). The FAB menu translates when you change the UI language.
+Drag it anywhere on the page — its position is remembered across page loads. In Settings, you can disable the FAB or adjust its size (32–72px). The FAB menu translates when you change the UI language.
 
 ### Context menu & Images
 
@@ -164,13 +192,13 @@ Access settings via the gear icon in the popup. The sleek interfaces allow deep 
 
 | Section | Options |
 |---------|---------|
-| **General** | Source language, target language, display mode (bilingual/replace) |
+| **General** | Source language, target language, display mode (bilingual/replace), auto-detect & prompt |
 | **Engine** | Select active engine, filter by free/paid |
 | **API Keys** | Per-engine key input with Validate button |
 | **Translation Style** | Font size (70–120%), font family, text color, border color, italic |
 | **Interface** | Theme (light/dark/system), UI language (11 locales), popup scale |
 | **Floating Button** | Enable/disable FAB, adjust size (32–72px) |
-| **Shortcuts** | `Alt+A` to toggle translation |
+| **Shortcuts** | `Alt+A` toggle translation, `Ctrl+Shift+H` hover mode, `Ctrl+Shift+S` translate selection |
 | **Data** | Cache stats and clear button |
 | **Site Lists** | Auto-translate domains, never-translate domains |
 
@@ -181,7 +209,10 @@ Access settings via the gear icon in the popup. The sleek interfaces allow deep 
 ```
 linguaflow/
 ├── public/
-│   ├── manifest.json              # Chrome Manifest V3 configuration
+│   ├── manifest.json              # Base Manifest V3 (Chrome + Firefox variants generated at build)
+│   ├── _locales/                  # Native manifest i18n (name/description)
+│   ├── pdfjs/                      # Bundled PDF.js viewer assets
+│   ├── tesseract/                 # Bundled Tesseract.js OCR assets
 │   └── icons/                     # Extension icons (16/32/48/128px + logo)
 ├── src/
 │   ├── types/                     # TypeScript interfaces & enums
@@ -191,13 +222,16 @@ linguaflow/
 │   │   └── dom.ts                 # TranslatableNode interface
 │   ├── constants/
 │   │   ├── languages.ts           # 29 languages with ISO codes
-│   │   ├── engines.ts             # 10 engine definitions (name, color, requiresKey)
+│   │   ├── engines.ts             # 11 engine definitions (name, color, requiresKey)
 │   │   └── defaults.ts            # Default settings values
 │   ├── shared/
-│   │   ├── storage.ts             # Typed chrome.storage.local wrapper
+│   │   ├── storage.ts             # Typed storage wrapper (local + optional sync)
 │   │   ├── cache.ts               # IndexedDB cache (FNV-1a hash, LRU, 7-day TTL)
 │   │   ├── message-bus.ts         # Typed message helpers
 │   │   ├── i18n.ts                # 11-locale i18n system with flag emoji support
+│   │   ├── glossary-store.ts      # Custom glossary term overrides
+│   │   ├── vocab-store.ts         # Saved vocabulary entries
+│   │   ├── site-rulesHelper.ts    # Per-site rule resolution
 │   │   └── logger.ts              # Prefixed console logger
 │   ├── engines/
 │   │   ├── base-engine.ts         # Abstract base class
@@ -211,6 +245,7 @@ linguaflow/
 │   │   ├── openai-engine.ts       # GPT Chat Completions
 │   │   ├── claude-engine.ts       # Anthropic Messages API
 │   │   ├── microsoft-engine.ts    # Azure Cognitive Services
+│   │   ├── chrome-builtin-engine.ts # Offline on-device Translator API
 │   │   └── index.ts               # Engine factory
 │   ├── background/
 │   │   ├── index.ts               # Service worker entry
@@ -221,12 +256,23 @@ linguaflow/
 │   ├── content/
 │   │   ├── index.ts               # Content script orchestrator
 │   │   ├── content.css            # Bilingual block styles, spinners
+│   │   ├── safe-dom.ts            # Trusted-HTML / sanitized DOM helpers
 │   │   ├── dom-walker.ts          # TreeWalker for translatable nodes
 │   │   ├── content-detector.ts    # Content area heuristics, exclusion filters
 │   │   ├── translator-ui.ts       # Inject/remove bilingual blocks
+│   │   ├── translation-progress.ts # On-page progress indicator
 │   │   ├── hover-handler.ts       # 300ms debounced hover translate
-│   │   ├── floating-button.ts     # Draggable FAB with i18n labels
+│   │   ├── selection-popup.ts     # Selection translate/compare/explain/TTS/save
+│   │   ├── dictionary-popup.ts    # Double-click word definition popup
+│   │   ├── reading-mode.ts        # Readability article extraction + translation
+│   │   ├── pdf-handler.ts         # Local/online PDF split-view rendering
+│   │   ├── image-translator.ts    # Image OCR translation (Tesseract.js)
+│   │   ├── live-captions.ts       # On-screen caption translation
+│   │   ├── video-subtitles.ts     # Video subtitle track translation
+│   │   ├── floating-button.ts     # Draggable FAB with i18n labels + position persistence
+│   │   ├── translate-prompt.ts    # Auto-detect language & offer-to-translate bar
 │   │   ├── onboarding.ts          # First-time tooltip
+│   │   ├── product-tour.ts        # Optional guided walkthrough (driver.js)
 │   │   └── mutation-observer.ts   # SPA content change watcher
 │   ├── popup/
 │   │   ├── index.html             # Popup shell
@@ -242,12 +288,13 @@ linguaflow/
 │       ├── main.tsx
 │       ├── App.tsx                # Full options page with tabs
 │       ├── options.css
-│       └── components/            # ApiKeyForm, CacheManager, StylePreferences, etc.
+│       └── components/            # ApiKeyForm, CacheManager, StylePreferences, SiteRulesManager, etc.
+├── src/welcome/                   # Post-install welcome page (React)
 ├── tests/
 │   ├── mocks/chrome.ts            # Chrome API mocks for Vitest
-│   └── unit/                      # 225 tests across 22 files
-│       ├── engines/               # Tests for all 10 engine implementations
-│       ├── content/               # content-detector, dom-walker, hover-handler, translator-ui
+│   └── unit/                      # 238 tests across 24 files
+│       ├── engines/               # Tests for all engine implementations
+│       ├── content/               # content-detector, dom-walker, hover-handler, translator-ui, pdf-handler
 │       ├── shared/                # storage, message-bus, i18n, logger
 │       ├── constants/             # defaults, engines
 │       └── background/            # translation-service
@@ -267,11 +314,13 @@ Three separate Vite configurations produce independent bundles:
 
 | Config | Entry | Format | Output |
 |--------|-------|--------|--------|
-| `vite.config.ts` | Popup + Options HTML | ES modules | `dist/popup/`, `dist/options/` |
+| `vite.config.ts` | Popup + Options + Welcome HTML | ES modules | `dist/popup/`, `dist/options/`, `dist/welcome/` |
 | `vite.content.config.ts` | `src/content/index.ts` | IIFE | `dist/content/index.js` |
 | `vite.background.config.ts` | `src/background/index.ts` | ES module | `dist/background/index.js` |
 
 All three run in parallel during development via `concurrently`.
+
+A cross-browser manifest is generated per target by `scripts/build-manifest.mjs` — Chrome uses `background.service_worker`; Firefox uses `background.scripts` plus `browser_specific_settings`. `npm run build` runs the full pipeline for both `dist/` (Chrome) and `dist-firefox/` (Firefox) and zips each.
 
 ### Message Passing
 
@@ -333,7 +382,11 @@ API endpoints for each translation engine:
 - `https://api-free.deepl.com/*` / `https://api.deepl.com/*`
 - `https://api.openai.com/*`
 - `https://api.anthropic.com/*`
-- `https://api.cognitive.microsofttranslator.com/*`
+- `https://api.cognitive.microsofttranslator.com/*` / `https://api-edge.cognitive.microsofttranslator.com/*`
+- `https://translate.yandex.net/*` / `https://translate.yandex.com/*`
+- `https://api.mymemory.translated.net/*`
+- `https://libretranslate.com/*`
+- `https://lingva.ml/*`
 
 ---
 
@@ -344,8 +397,8 @@ API endpoints for each translation engine:
 | UI Framework | React 19 |
 | Language | TypeScript 5.7 |
 | Build Tool | Vite 6 |
-| Testing | Vitest 2 (225 tests, jsdom) |
-| Extension | Chrome Manifest V3 |
+| Testing | Vitest 2 (238 tests, jsdom) |
+| Extension | Manifest V3 (Chrome + Firefox) |
 | Cache | IndexedDB |
 | Styling | Plain CSS |
 

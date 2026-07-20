@@ -31,4 +31,5 @@ export const DEFAULT_SETTINGS: UserSettings = {
   compareEngine: undefined,
   enableSync: false,
   dyslexiaFont: false,
+  autoDetectPrompt: true,
 };

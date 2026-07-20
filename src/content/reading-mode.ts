@@ -1,6 +1,5 @@
 import { Readability } from '@mozilla/readability';
 import DOMPurify from 'dompurify';
-import { getSettings } from '@/shared/storage';
 import { logger } from '@/shared/logger';
 import { setTrustedHTML } from './safe-dom';
 

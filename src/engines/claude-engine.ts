@@ -109,7 +109,7 @@ ${texts.length > 1 ? `- Multiple texts are separated by "${SEPARATOR.trim()}". T
                   content += parsed.delta.text;
                   onStream(parsed.delta.text);
                 }
-              } catch (e) {
+              } catch {
                 // ignore parse errors mid-stream
               }
             }

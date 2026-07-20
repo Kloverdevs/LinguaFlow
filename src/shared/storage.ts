@@ -10,7 +10,7 @@ export async function getSettings(): Promise<UserSettings> {
 
 export async function syncSettings(settings: UserSettings): Promise<void> {
   // Strip engineConfigs to avoid syncing API keys in plaintext
-  const { engineConfigs, ...syncableSettings } = settings;
+  const { engineConfigs: _engineConfigs, ...syncableSettings } = settings;
   await browser.storage.sync.set({ syncedSettings: syncableSettings });
 }
 

@@ -1,4 +1,4 @@
-import { TranslationEngine, TranslationResult } from './translation';
+import { TranslationEngine } from './translation';
 import { UserSettings } from './settings';
 
 // Messages sent from content script or popup to background
